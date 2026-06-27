@@ -1,0 +1,34 @@
+services:
+  libsql:
+    image: ghcr.io/tursodatabase/libsql-server:latest
+    platform: linux/amd64
+    ports:
+      - "8080:8080"
+      - "5001:5001"
+    environment:
+      SQLD_NODE: primary
+    env_file:
+      - ./docker/libsql/server.env
+    volumes:
+      - ./docker/libsql/data:/var/lib/sqld
+    restart: unless-stopped
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    ports:
+      - "3000:3000"
+    environment:
+      TURSO_DATABASE_URL: http://libsql:8080
+      WATCHPACK_POLLING: "true"
+    env_file:
+      - path: .env.local
+        required: false
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    command: bun run --bun next dev -H 0.0.0.0
+    depends_on:
+      - libsql
