@@ -8,16 +8,25 @@
     "start": "bun run --bun next start",
     "lint": "eslint",
     "format": "biome check --write .",
-    "format:check": "biome check ."
+    "format:check": "biome check .",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "bun run src/db/seed.ts"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.4",
+    "drizzle-orm": "^0.45.2",
     "next": "16.2.9",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.1",
     "@tailwindcss/postcss": "^4",
+    "drizzle-kit": "^0.31.10",
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
