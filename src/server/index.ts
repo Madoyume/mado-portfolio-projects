@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { articlesRoute } from "./routes/articles";
+import { blogRoute } from "./routes/blog";
 import { careersRoute } from "./routes/careers";
 import { photosRoute } from "./routes/photos";
 import { profileRoute } from "./routes/profile";
@@ -10,7 +10,7 @@ const app = new Hono()
   .route("/profile", profileRoute)
   .route("/careers", careersRoute)
   .route("/skills", skillsRoute)
-  .route("/articles", articlesRoute)
+  .route("/blog", blogRoute)
   .route("/photos", photosRoute);
 
 export { app };

@@ -1,18 +1,3 @@
-CREATE TABLE `articles` (
-	`id` text PRIMARY KEY NOT NULL,
-	`slug` text NOT NULL,
-	`title` text NOT NULL,
-	`description` text,
-	`body` text NOT NULL,
-	`cover_image_url` text,
-	`tags` text,
-	`status` text DEFAULT 'draft' NOT NULL,
-	`published_at` text,
-	`created_at` text NOT NULL,
-	`updated_at` text NOT NULL
-);
---> statement-breakpoint
-CREATE UNIQUE INDEX `articles_slug_unique` ON `articles` (`slug`);--> statement-breakpoint
 CREATE TABLE `careers` (
 	`id` text PRIMARY KEY NOT NULL,
 	`company` text NOT NULL,
@@ -35,6 +20,21 @@ CREATE TABLE `photos` (
 	`created_at` text NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE `posts` (
+	`id` text PRIMARY KEY NOT NULL,
+	`slug` text NOT NULL,
+	`title` text NOT NULL,
+	`description` text,
+	`body` text NOT NULL,
+	`cover_image_url` text,
+	`tags` text,
+	`status` text DEFAULT 'draft' NOT NULL,
+	`published_at` text,
+	`created_at` text NOT NULL,
+	`updated_at` text NOT NULL
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `posts_slug_unique` ON `posts` (`slug`);--> statement-breakpoint
 CREATE TABLE `profile` (
 	`id` text PRIMARY KEY DEFAULT 'default' NOT NULL,
 	`name` text NOT NULL,

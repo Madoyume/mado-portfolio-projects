@@ -40,7 +40,7 @@ export const skills = sqliteTable("skills", {
   sortOrder: integer("sort_order").notNull().default(0),
 });
 
-export const articles = sqliteTable("articles", {
+export const posts = sqliteTable("posts", {
   id: id(),
   slug: text("slug").notNull().unique(),
   title: text("title").notNull(),
@@ -69,4 +69,4 @@ export const photos = sqliteTable("photos", {
   createdAt: text("created_at").notNull().$defaultFn(now),
 });
 
-export const schema = { profile, careers, skills, articles, photos };
+export const schema = { profile, careers, skills, posts, photos };
