@@ -3,7 +3,9 @@ import { and, desc, eq, isNotNull, lt, lte } from "drizzle-orm";
 import { Hono } from "hono";
 import { db } from "@/db/client";
 import { posts } from "@/db/schema";
-import { postListQuery } from "@/schemas/post";
+import { postInput, postListQuery } from "@/schemas/post";
+import { requireAuth } from "@/server/middleware/auth";
+import { zJson } from "@/server/validator";
 
 export const blogRoute = new Hono()
   .get("/", zValidator("query", postListQuery), async (c) => {
@@ -58,4 +60,33 @@ export const blogRoute = new Hono()
 
     if (!row) return c.json({ message: "post not found" }, 404);
     return c.json(row);
+  })
+  .post("/", requireAuth, zJson(postInput), async (c) => {
+    const data = c.req.valid("json");
+    try {
+      const [row] = await db.insert(posts).values(data).returning();
+      return c.json(row, 201);
+    } catch (err) {
+      if (err instanceof Error && /UNIQUE/i.test(err.message)) {
+        return c.json({ message: "slug already exists" }, 409);
+      }
+      throw err;
+    }
+  })
+  .put("/:slug", requireAuth, zJson(postInput), async (c) => {
+    const [row] = await db
+      .update(posts)
+      .set(c.req.valid("json"))
+      .where(eq(posts.slug, c.req.param("slug")))
+      .returning();
+    if (!row) return c.json({ message: "post not found" }, 404);
+    return c.json(row);
+  })
+  .delete("/:slug", requireAuth, async (c) => {
+    const [row] = await db
+      .delete(posts)
+      .where(eq(posts.slug, c.req.param("slug")))
+      .returning();
+    if (!row) return c.json({ message: "post not found" }, 404);
+    return c.body(null, 204);
   });
