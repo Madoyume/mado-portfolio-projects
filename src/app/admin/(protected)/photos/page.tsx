@@ -3,6 +3,7 @@
 import type { InferResponseType } from "hono/client";
 import { useEffect, useState } from "react";
 import { AdminTopbar } from "@/components/admin/topbar";
+import { UploadButton } from "@/components/admin/upload-button";
 import { client } from "@/lib/rpc";
 
 type Photo = InferResponseType<typeof client.api.photos.$get>[number];
@@ -34,22 +35,13 @@ export default function PhotosAdminPage() {
     load();
   }, []);
 
-  async function upload(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const formEl = e.currentTarget;
-    const fileInput = formEl.elements.namedItem("file") as HTMLInputElement;
-    const titleInput = formEl.elements.namedItem("title") as HTMLInputElement;
-    if (!fileInput.files?.[0]) return;
+  async function upload(file: File) {
     setUploading(true);
     const fd = new FormData();
-    fd.append("file", fileInput.files[0]);
-    if (titleInput.value) fd.append("title", titleInput.value);
+    fd.append("file", file);
     const res = await fetch("/api/photos", { method: "POST", body: fd });
     setUploading(false);
-    if (res.ok) {
-      formEl.reset();
-      await load();
-    }
+    if (res.ok) await load();
   }
 
   function edit(photo: Photo) {
@@ -93,26 +85,22 @@ export default function PhotosAdminPage() {
     <main className="admin__main">
       <AdminTopbar title="写真" />
 
-      <form
+      <div
         className="panel"
-        onSubmit={upload}
         style={{ marginBottom: "var(--space-5)", maxWidth: 520 }}
       >
-        <h2 style={{ fontSize: "1.1rem", marginBottom: "var(--space-4)" }}>
+        <h2 style={{ fontSize: "1.1rem", marginBottom: "var(--space-3)" }}>
           写真をアップロード
         </h2>
-        <div className="field">
-          <label htmlFor="file">画像ファイル</label>
-          <input id="file" name="file" type="file" accept="image/*" required />
-        </div>
-        <div className="field">
-          <label htmlFor="title">タイトル（任意）</label>
-          <input id="title" name="title" type="text" />
-        </div>
-        <button type="submit" className="btn" disabled={uploading}>
-          {uploading ? "アップロード中…" : "アップロード"}
-        </button>
-      </form>
+        <UploadButton
+          label={uploading ? "アップロード中…" : "画像を選択してアップロード"}
+          disabled={uploading}
+          onSelect={upload}
+        />
+        <p className="field__hint" style={{ marginTop: "var(--space-2)" }}>
+          選択すると即アップロードされます。タイトル等は下の「編集」から設定できます。
+        </p>
+      </div>
 
       {editingId && (
         <form

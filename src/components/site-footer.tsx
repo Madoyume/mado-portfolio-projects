@@ -13,8 +13,22 @@ export async function SiteFooter() {
         </span>
         <div className="social">
           {links.map((link) => (
-            <a key={link.url} href={link.url} target="_blank" rel="noreferrer">
-              {link.label}
+            <a
+              key={link.url}
+              href={link.url}
+              target="_blank"
+              rel="noreferrer"
+              title={link.label}
+            >
+              {link.iconUrl ? (
+                <img
+                  src={link.iconUrl}
+                  alt={link.label}
+                  className="social__icon"
+                />
+              ) : (
+                link.label
+              )}
             </a>
           ))}
           {profile?.email && <a href={`mailto:${profile.email}`}>Mail</a>}

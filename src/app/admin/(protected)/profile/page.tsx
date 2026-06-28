@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AdminTopbar } from "@/components/admin/topbar";
+import { UploadButton } from "@/components/admin/upload-button";
 import { client } from "@/lib/rpc";
 
 type SocialLink = { label: string; url: string; iconUrl?: string };
@@ -216,13 +217,7 @@ export default function ProfileAdminPage() {
             onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })}
           />
           <div className="image-field__actions">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) =>
-                e.target.files?.[0] && uploadAvatar(e.target.files[0])
-              }
-            />
+            <UploadButton label="画像をアップロード" onSelect={uploadAvatar} />
             {form.avatarUrl && (
               <button
                 type="button"
@@ -252,13 +247,7 @@ export default function ProfileAdminPage() {
             onChange={(e) => setForm({ ...form, heroImageUrl: e.target.value })}
           />
           <div className="image-field__actions">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) =>
-                e.target.files?.[0] && uploadHero(e.target.files[0])
-              }
-            />
+            <UploadButton label="画像をアップロード" onSelect={uploadHero} />
             {form.heroImageUrl && (
               <button
                 type="button"
@@ -283,13 +272,9 @@ export default function ProfileAdminPage() {
           <div className="sns-row" key={i}>
             <div className="sns-icon">
               {link.iconUrl && <img src={link.iconUrl} alt="" />}
-              <input
-                type="file"
-                accept="image/*"
-                style={{ maxWidth: 150 }}
-                onChange={(e) =>
-                  e.target.files?.[0] && uploadIcon(i, e.target.files[0])
-                }
+              <UploadButton
+                label="アイコン"
+                onSelect={(file) => uploadIcon(i, file)}
               />
             </div>
             <div className="field">
