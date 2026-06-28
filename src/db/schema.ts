@@ -48,7 +48,10 @@ export const articles = sqliteTable("articles", {
   body: text("body").notNull(),
   coverImageUrl: text("cover_image_url"),
   tags: text("tags", { mode: "json" }).$type<string[]>(),
-  status: text("status").$type<"draft" | "published">().notNull().default("draft"),
+  status: text("status")
+    .$type<"draft" | "published">()
+    .notNull()
+    .default("draft"),
   publishedAt: text("published_at"),
   createdAt: text("created_at").notNull().$defaultFn(now),
   updatedAt: text("updated_at").notNull().$defaultFn(now).$onUpdateFn(now),

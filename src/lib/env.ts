@@ -5,4 +5,11 @@ const schema = z.object({
   TURSO_AUTH_TOKEN: z.string().optional(),
 });
 
-export const env = schema.parse(process.env);
+type Env = z.infer<typeof schema>;
+
+let cached: Env | undefined;
+
+export function getEnv(): Env {
+  if (!cached) cached = schema.parse(process.env);
+  return cached;
+}

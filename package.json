@@ -21,8 +21,10 @@
     "docker:build": "docker compose build"
   },
   "dependencies": {
+    "@hono/zod-validator": "^0.8.0",
     "@libsql/client": "^0.17.4",
     "drizzle-orm": "^0.45.2",
+    "hono": "^4.12.27",
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
