@@ -36,7 +36,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${notoSans.variable} ${notoSerif.variable}`}
     >
-      <body>
+      <body suppressHydrationWarning>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

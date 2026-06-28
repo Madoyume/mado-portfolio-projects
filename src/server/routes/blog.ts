@@ -41,6 +41,10 @@ export const blogRoute = new Hono()
 
     return c.json({ items, nextCursor });
   })
+  .get("/admin/all", requireAuth, async (c) => {
+    const rows = await db.select().from(posts).orderBy(desc(posts.updatedAt));
+    return c.json(rows);
+  })
   .get("/:slug", async (c) => {
     const slug = c.req.param("slug");
     const now = new Date().toISOString();
