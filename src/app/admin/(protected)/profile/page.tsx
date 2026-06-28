@@ -57,12 +57,61 @@ export default function ProfileAdminPage() {
   }, []);
 
   function setLink(index: number, patch: Partial<SocialLink>) {
-    setForm({
-      ...form,
-      socialLinks: form.socialLinks.map((l, i) =>
+    setForm((f) => ({
+      ...f,
+      socialLinks: f.socialLinks.map((l, i) =>
         i === index ? { ...l, ...patch } : l,
       ),
+    }));
+  }
+
+  async function uploadHero(file: File) {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/profile/hero-image", {
+      method: "POST",
+      body: fd,
     });
+    if (res.ok) {
+      const p = await res.json();
+      setForm((f) => ({ ...f, heroImageUrl: p.heroImageUrl ?? "" }));
+    }
+  }
+
+  async function removeHero() {
+    const res = await fetch("/api/profile/hero-image", { method: "DELETE" });
+    if (res.ok) setForm((f) => ({ ...f, heroImageUrl: "" }));
+  }
+
+  async function uploadAvatar(file: File) {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/profile/avatar", {
+      method: "POST",
+      body: fd,
+    });
+    if (res.ok) {
+      const p = await res.json();
+      setForm((f) => ({ ...f, avatarUrl: p.avatarUrl ?? "" }));
+    }
+  }
+
+  async function removeAvatar() {
+    const res = await fetch("/api/profile/avatar", { method: "DELETE" });
+    if (res.ok) setForm((f) => ({ ...f, avatarUrl: "" }));
+  }
+
+  async function uploadIcon(index: number, file: File) {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/profile/social-icon", {
+      method: "POST",
+      body: fd,
+    });
+    if (res.ok) {
+      const { iconUrl } = (await res.json()) as { iconUrl: string };
+      setLink(index, { iconUrl });
+    }
   }
 
   async function submit(e: React.FormEvent) {
@@ -144,27 +193,82 @@ export default function ProfileAdminPage() {
             />
           </div>
         </div>
-        <div className="field">
-          <label htmlFor="avatarUrl">アバター画像URL</label>
+        <div className="field image-field">
+          <label htmlFor="avatarUrl">アバター画像</label>
+          {form.avatarUrl && (
+            <img
+              src={form.avatarUrl}
+              alt=""
+              style={{
+                width: 96,
+                height: 96,
+                borderRadius: "50%",
+                objectFit: "cover",
+                border: "1px solid var(--border)",
+              }}
+            />
+          )}
           <input
             id="avatarUrl"
             type="url"
             value={form.avatarUrl}
+            placeholder="URL直接入力、または下からアップロード"
             onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })}
           />
-          <p className="field__hint">
-            画像アップロード（Cloudinary）は Phase 6
-            後半で対応。当面はURL直指定。
-          </p>
+          <div className="image-field__actions">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) =>
+                e.target.files?.[0] && uploadAvatar(e.target.files[0])
+              }
+            />
+            {form.avatarUrl && (
+              <button
+                type="button"
+                className="btn btn--danger btn--sm"
+                onClick={removeAvatar}
+              >
+                画像を削除
+              </button>
+            )}
+          </div>
         </div>
-        <div className="field">
-          <label htmlFor="heroImageUrl">ヒーロー画像URL</label>
+
+        <div className="field image-field">
+          <label htmlFor="heroImageUrl">ヒーロー画像</label>
+          {form.heroImageUrl && (
+            <img
+              src={form.heroImageUrl}
+              alt=""
+              className="hero-setting__preview"
+            />
+          )}
           <input
             id="heroImageUrl"
             type="url"
             value={form.heroImageUrl}
+            placeholder="URL直接入力、または下からアップロード"
             onChange={(e) => setForm({ ...form, heroImageUrl: e.target.value })}
           />
+          <div className="image-field__actions">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) =>
+                e.target.files?.[0] && uploadHero(e.target.files[0])
+              }
+            />
+            {form.heroImageUrl && (
+              <button
+                type="button"
+                className="btn btn--danger btn--sm"
+                onClick={removeHero}
+              >
+                画像を削除
+              </button>
+            )}
+          </div>
         </div>
 
         <h2
@@ -177,6 +281,17 @@ export default function ProfileAdminPage() {
         </h2>
         {form.socialLinks.map((link, i) => (
           <div className="sns-row" key={i}>
+            <div className="sns-icon">
+              {link.iconUrl && <img src={link.iconUrl} alt="" />}
+              <input
+                type="file"
+                accept="image/*"
+                style={{ maxWidth: 150 }}
+                onChange={(e) =>
+                  e.target.files?.[0] && uploadIcon(i, e.target.files[0])
+                }
+              />
+            </div>
             <div className="field">
               <label>ラベル</label>
               <input

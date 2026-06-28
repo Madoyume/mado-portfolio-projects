@@ -10,8 +10,15 @@ const authSchema = z.object({
   SESSION_SECRET: z.string().min(32),
 });
 
+const cloudinarySchema = z.object({
+  CLOUDINARY_CLOUD_NAME: z.string().min(1),
+  CLOUDINARY_API_KEY: z.string().min(1),
+  CLOUDINARY_API_SECRET: z.string().min(1),
+});
+
 let dbCache: z.infer<typeof dbSchema> | undefined;
 let authCache: z.infer<typeof authSchema> | undefined;
+let cloudinaryCache: z.infer<typeof cloudinarySchema> | undefined;
 
 export function getEnv() {
   if (!dbCache) dbCache = dbSchema.parse(process.env);
@@ -21,4 +28,9 @@ export function getEnv() {
 export function getAuthEnv() {
   if (!authCache) authCache = authSchema.parse(process.env);
   return authCache;
+}
+
+export function getCloudinaryEnv() {
+  if (!cloudinaryCache) cloudinaryCache = cloudinarySchema.parse(process.env);
+  return cloudinaryCache;
 }

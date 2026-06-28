@@ -17,6 +17,7 @@ type PhotoForm = {
 export default function PhotosAdminPage() {
   const [items, setItems] = useState<Photo[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState<PhotoForm>({
     title: "",
     description: "",
@@ -32,6 +33,24 @@ export default function PhotosAdminPage() {
   useEffect(() => {
     load();
   }, []);
+
+  async function upload(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formEl = e.currentTarget;
+    const fileInput = formEl.elements.namedItem("file") as HTMLInputElement;
+    const titleInput = formEl.elements.namedItem("title") as HTMLInputElement;
+    if (!fileInput.files?.[0]) return;
+    setUploading(true);
+    const fd = new FormData();
+    fd.append("file", fileInput.files[0]);
+    if (titleInput.value) fd.append("title", titleInput.value);
+    const res = await fetch("/api/photos", { method: "POST", body: fd });
+    setUploading(false);
+    if (res.ok) {
+      formEl.reset();
+      await load();
+    }
+  }
 
   function edit(photo: Photo) {
     setEditingId(photo.id);
@@ -73,10 +92,27 @@ export default function PhotosAdminPage() {
   return (
     <main className="admin__main">
       <AdminTopbar title="写真" />
-      <p className="field__hint" style={{ marginBottom: "var(--space-4)" }}>
-        画像アップロード（Cloudinary）は Phase 6
-        後半で対応します。現状はメタ情報の編集・削除のみ。
-      </p>
+
+      <form
+        className="panel"
+        onSubmit={upload}
+        style={{ marginBottom: "var(--space-5)", maxWidth: 520 }}
+      >
+        <h2 style={{ fontSize: "1.1rem", marginBottom: "var(--space-4)" }}>
+          写真をアップロード
+        </h2>
+        <div className="field">
+          <label htmlFor="file">画像ファイル</label>
+          <input id="file" name="file" type="file" accept="image/*" required />
+        </div>
+        <div className="field">
+          <label htmlFor="title">タイトル（任意）</label>
+          <input id="title" name="title" type="text" />
+        </div>
+        <button type="submit" className="btn" disabled={uploading}>
+          {uploading ? "アップロード中…" : "アップロード"}
+        </button>
+      </form>
 
       {editingId && (
         <form
@@ -88,18 +124,18 @@ export default function PhotosAdminPage() {
             写真情報を編集
           </h2>
           <div className="field">
-            <label htmlFor="title">タイトル</label>
+            <label htmlFor="edit-title">タイトル</label>
             <input
-              id="title"
+              id="edit-title"
               type="text"
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
             />
           </div>
           <div className="field">
-            <label htmlFor="description">説明</label>
+            <label htmlFor="edit-description">説明</label>
             <textarea
-              id="description"
+              id="edit-description"
               value={form.description}
               onChange={(e) =>
                 setForm({ ...form, description: e.target.value })
@@ -108,9 +144,9 @@ export default function PhotosAdminPage() {
           </div>
           <div className="field-row">
             <div className="field">
-              <label htmlFor="takenAt">撮影日</label>
+              <label htmlFor="edit-takenAt">撮影日</label>
               <input
-                id="takenAt"
+                id="edit-takenAt"
                 type="text"
                 placeholder="2026-06-18"
                 value={form.takenAt}
@@ -118,9 +154,9 @@ export default function PhotosAdminPage() {
               />
             </div>
             <div className="field">
-              <label htmlFor="sortOrder">表示順</label>
+              <label htmlFor="edit-sortOrder">表示順</label>
               <input
-                id="sortOrder"
+                id="edit-sortOrder"
                 type="number"
                 value={form.sortOrder}
                 onChange={(e) =>
@@ -179,7 +215,7 @@ export default function PhotosAdminPage() {
           ))}
         </div>
       ) : (
-        <p className="muted">写真がありません。</p>
+        <p className="muted">写真がありません。アップロードしてください。</p>
       )}
     </main>
   );
