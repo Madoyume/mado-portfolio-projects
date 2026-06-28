@@ -1,36 +1,44 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Noto_Sans_JP, Noto_Serif_JP } from "next/font/google";
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const notoSans = Noto_Sans_JP({
+  weight: ["400", "500", "600"],
   subsets: ["latin"],
+  display: "swap",
+  preload: false,
+  variable: "--font-noto-sans-jp",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const notoSerif = Noto_Serif_JP({
+  weight: ["400", "500", "600"],
   subsets: ["latin"],
+  display: "swap",
+  preload: false,
+  variable: "--font-noto-serif-jp",
 });
 
 export const metadata: Metadata = {
   title: {
-    default: "madotsuki | Web Engineer Portfolio",
-    template: "%s | madotsuki",
+    default: "Mado — Web Engineer",
+    template: "%s | Mado",
   },
-  description: "madotsuki のポートフォリオサイト。",
+  description: "Mado のポートフォリオサイト。",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="ja"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`${notoSans.variable} ${notoSerif.variable}`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

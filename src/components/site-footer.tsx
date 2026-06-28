@@ -1,0 +1,25 @@
+import { getProfile } from "@/lib/api";
+
+export async function SiteFooter() {
+  const profile = await getProfile();
+  const year = new Date().getFullYear();
+  const links = profile?.socialLinks ?? [];
+
+  return (
+    <footer className="site-footer">
+      <div className="site-footer__inner">
+        <span>
+          © {year} {profile?.name ?? "Mado"}
+        </span>
+        <div className="social">
+          {links.map((link) => (
+            <a key={link.url} href={link.url} target="_blank" rel="noreferrer">
+              {link.label}
+            </a>
+          ))}
+          {profile?.email && <a href={`mailto:${profile.email}`}>Mail</a>}
+        </div>
+      </div>
+    </footer>
+  );
+}
