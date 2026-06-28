@@ -15,10 +15,8 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "bun run src/db/seed.ts",
     "db:keygen": "bun run scripts/libsql-keygen.ts",
-    "docker:up": "docker compose up -d",
-    "docker:down": "docker compose down",
     "docker:db": "docker compose up -d libsql",
-    "docker:build": "docker compose build"
+    "docker:down": "docker compose down"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.8.0",

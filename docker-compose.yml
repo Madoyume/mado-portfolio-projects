@@ -12,23 +12,3 @@ services:
     volumes:
       - ./docker/libsql/data:/var/lib/sqld
     restart: unless-stopped
-
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile.local
-    ports:
-      - "3000:3000"
-    environment:
-      TURSO_DATABASE_URL: http://libsql:8080
-      WATCHPACK_POLLING: "true"
-    env_file:
-      - path: .env.local
-        required: false
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/.next
-    command: bun run --bun next dev -H 0.0.0.0
-    depends_on:
-      - libsql
