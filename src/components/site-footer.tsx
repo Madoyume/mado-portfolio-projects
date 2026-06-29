@@ -31,7 +31,11 @@ export async function SiteFooter() {
               )}
             </a>
           ))}
-          {profile?.email && <a href={`mailto:${profile.email}`}>Mail</a>}
+          {profile?.email && (
+            <a href={`mailto:${profile.email}`} title="Mail">
+              <img src="/mail.png" alt="Mail" className="social__icon" />
+            </a>
+          )}
         </div>
       </div>
     </footer>
