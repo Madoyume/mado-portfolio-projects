@@ -26,12 +26,6 @@ export default async function Home() {
         <div className="hero__scroll">SCROLL</div>
       </section>
 
-      {profile?.bio && (
-        <section className="intro container">
-          <p>{profile.bio}</p>
-        </section>
-      )}
-
       <hr className="divider container" />
 
       <section className="section container container-wide">

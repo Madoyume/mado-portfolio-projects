@@ -50,7 +50,9 @@ export default async function About() {
                 <h4>{career.company}</h4>
                 <p className="role">{career.role}</p>
                 {career.description && (
-                  <p className="muted">{career.description}</p>
+                  <p className="muted" style={{ whiteSpace: "pre-line" }}>
+                    {career.description}
+                  </p>
                 )}
               </div>
             </li>
