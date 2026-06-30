@@ -3,8 +3,10 @@
 import type { InferRequestType, InferResponseType } from "hono/client";
 import { useEffect, useState } from "react";
 import { AdminTopbar } from "@/components/admin/topbar";
+import { UploadButton } from "@/components/admin/upload-button";
 import { formatDate } from "@/lib/format";
 import { client } from "@/lib/rpc";
+import { uploadToCloudinary } from "@/lib/upload";
 
 type Post = InferResponseType<
   typeof client.api.blog.admin.all.$get,
@@ -68,6 +70,11 @@ export default function BlogAdminPage() {
       status: post.status,
       publishedAt: post.publishedAt ?? "",
     });
+  }
+
+  async function uploadCover(file: File) {
+    const { url } = await uploadToCloudinary(file, { folder: "mado/blog" });
+    setForm((f) => ({ ...f, coverImageUrl: url }));
   }
 
   async function submit(e: React.FormEvent) {
@@ -220,16 +227,36 @@ export default function BlogAdminPage() {
             onChange={(e) => setForm({ ...form, tags: e.target.value })}
           />
         </div>
-        <div className="field">
-          <label htmlFor="coverImageUrl">カバー画像URL</label>
+        <div className="field image-field">
+          <label htmlFor="coverImageUrl">カバー画像</label>
+          {form.coverImageUrl && (
+            <img
+              src={form.coverImageUrl}
+              alt=""
+              className="hero-setting__preview"
+            />
+          )}
           <input
             id="coverImageUrl"
             type="url"
+            placeholder="URL直接入力、または下からアップロード"
             value={form.coverImageUrl}
             onChange={(e) =>
               setForm({ ...form, coverImageUrl: e.target.value })
             }
           />
+          <div className="image-field__actions">
+            <UploadButton label="画像をアップロード" onSelect={uploadCover} />
+            {form.coverImageUrl && (
+              <button
+                type="button"
+                className="btn btn--danger btn--sm"
+                onClick={() => setForm({ ...form, coverImageUrl: "" })}
+              >
+                クリア
+              </button>
+            )}
+          </div>
         </div>
         <div className="field-row">
           <div className="field">

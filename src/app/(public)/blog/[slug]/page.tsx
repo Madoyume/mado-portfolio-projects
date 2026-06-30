@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Markdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
+import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import { getPost } from "@/lib/api";
 import { formatDate } from "@/lib/format";
@@ -63,7 +64,10 @@ export default async function BlogDetail({
       )}
 
       <div className="container prose">
-        <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]}>
+        <Markdown
+          remarkPlugins={[remarkGfm, remarkBreaks]}
+          rehypePlugins={[rehypeHighlight]}
+        >
           {post.body}
         </Markdown>
       </div>

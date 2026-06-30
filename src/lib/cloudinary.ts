@@ -48,7 +48,7 @@ export function imageUrl(publicId: string) {
     : null;
 }
 
-const ALLOWED_FOLDERS = ["mado/photos", "mado/social"];
+const ALLOWED_FOLDERS = ["mado/photos", "mado/social", "mado/blog"];
 const ALLOWED_PUBLIC_IDS = ["mado/hero", "mado/avatar"];
 
 export function signUpload(params: { folder?: string; publicId?: string }) {

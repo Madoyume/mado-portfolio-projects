@@ -23,7 +23,6 @@ export default async function Home() {
           <h1 className="hero__name">{profile?.name ?? "Mado"}</h1>
           <p className="hero__role">{profile?.headline ?? "Web Engineer"}</p>
         </div>
-        <div className="hero__scroll">SCROLL</div>
       </section>
 
       <hr className="divider container" />
