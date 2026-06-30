@@ -148,9 +148,21 @@ h4 {
   justify-content: space-between;
 }
 .brand {
-  font-family: var(--serif);
-  font-size: 1.15rem;
-  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+}
+.brand__logo {
+  height: 26px;
+  width: auto;
+}
+.brand__logo--dark {
+  display: none;
+}
+[data-theme="dark"] .brand__logo--light {
+  display: none;
+}
+[data-theme="dark"] .brand__logo--dark {
+  display: block;
 }
 .nav {
   display: flex;
