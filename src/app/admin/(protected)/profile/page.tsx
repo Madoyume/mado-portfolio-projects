@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AdminTopbar } from "@/components/admin/topbar";
 import { UploadButton } from "@/components/admin/upload-button";
 import { client } from "@/lib/rpc";
+import { uploadToCloudinary } from "@/lib/upload";
 
 type SocialLink = { label: string; url: string; iconUrl?: string };
 
@@ -67,16 +68,8 @@ export default function ProfileAdminPage() {
   }
 
   async function uploadHero(file: File) {
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/profile/hero-image", {
-      method: "POST",
-      body: fd,
-    });
-    if (res.ok) {
-      const p = await res.json();
-      setForm((f) => ({ ...f, heroImageUrl: p.heroImageUrl ?? "" }));
-    }
+    const { url } = await uploadToCloudinary(file, { publicId: "mado/hero" });
+    setForm((f) => ({ ...f, heroImageUrl: url }));
   }
 
   async function removeHero() {
@@ -85,16 +78,8 @@ export default function ProfileAdminPage() {
   }
 
   async function uploadAvatar(file: File) {
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/profile/avatar", {
-      method: "POST",
-      body: fd,
-    });
-    if (res.ok) {
-      const p = await res.json();
-      setForm((f) => ({ ...f, avatarUrl: p.avatarUrl ?? "" }));
-    }
+    const { url } = await uploadToCloudinary(file, { publicId: "mado/avatar" });
+    setForm((f) => ({ ...f, avatarUrl: url }));
   }
 
   async function removeAvatar() {
@@ -103,16 +88,8 @@ export default function ProfileAdminPage() {
   }
 
   async function uploadIcon(index: number, file: File) {
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/profile/social-icon", {
-      method: "POST",
-      body: fd,
-    });
-    if (res.ok) {
-      const { iconUrl } = (await res.json()) as { iconUrl: string };
-      setLink(index, { iconUrl });
-    }
+    const { url } = await uploadToCloudinary(file, { folder: "mado/social" });
+    setLink(index, { iconUrl: url });
   }
 
   async function submit(e: React.FormEvent) {

@@ -5,6 +5,7 @@ import { careersRoute } from "./routes/careers";
 import { photosRoute } from "./routes/photos";
 import { profileRoute } from "./routes/profile";
 import { skillsRoute } from "./routes/skills";
+import { uploadsRoute } from "./routes/uploads";
 
 const app = new Hono()
   .basePath("/api")
@@ -13,7 +14,8 @@ const app = new Hono()
   .route("/careers", careersRoute)
   .route("/skills", skillsRoute)
   .route("/blog", blogRoute)
-  .route("/photos", photosRoute);
+  .route("/photos", photosRoute)
+  .route("/uploads", uploadsRoute);
 
 export { app };
 export type AppType = typeof app;

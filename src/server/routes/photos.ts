@@ -2,14 +2,10 @@ import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { db } from "@/db/client";
 import { photos } from "@/db/schema";
-import { deleteImage, imageUrl, uploadImage } from "@/lib/cloudinary";
-import { photoMetaInput } from "@/schemas/photo";
+import { deleteImage, imageUrl } from "@/lib/cloudinary";
+import { photoCreateInput, photoMetaInput } from "@/schemas/photo";
 import { requireAuth } from "@/server/middleware/auth";
 import { zJson } from "@/server/validator";
-
-function field(value: FormDataEntryValue | null) {
-  return typeof value === "string" && value ? value : null;
-}
 
 export const photosRoute = new Hono()
   .get("/", async (c) => {
@@ -20,23 +16,10 @@ export const photosRoute = new Hono()
     }));
     return c.json(items);
   })
-  .post("/", requireAuth, async (c) => {
-    const body = await c.req.formData();
-    const file = body.get("file");
-    if (!(file instanceof File)) {
-      return c.json({ message: "file is required" }, 422);
-    }
-    const uploaded = await uploadImage(file, { folder: "mado/photos" });
+  .post("/", requireAuth, zJson(photoCreateInput), async (c) => {
     const [row] = await db
       .insert(photos)
-      .values({
-        cloudinaryPublicId: uploaded.publicId,
-        width: uploaded.width,
-        height: uploaded.height,
-        title: field(body.get("title")),
-        description: field(body.get("description")),
-        takenAt: field(body.get("takenAt")),
-      })
+      .values(c.req.valid("json"))
       .returning();
     return c.json({ ...row, url: imageUrl(row.cloudinaryPublicId) }, 201);
   })

@@ -47,3 +47,35 @@ export function imageUrl(publicId: string) {
     ? `https://res.cloudinary.com/${cloud}/image/upload/${publicId}`
     : null;
 }
+
+const ALLOWED_FOLDERS = ["mado/photos", "mado/social"];
+const ALLOWED_PUBLIC_IDS = ["mado/hero", "mado/avatar"];
+
+export function signUpload(params: { folder?: string; publicId?: string }) {
+  const env = getCloudinaryEnv();
+  if (params.folder && !ALLOWED_FOLDERS.includes(params.folder)) {
+    throw new Error("folder not allowed");
+  }
+  if (params.publicId && !ALLOWED_PUBLIC_IDS.includes(params.publicId)) {
+    throw new Error("public_id not allowed");
+  }
+
+  const timestamp = Math.floor(Date.now() / 1000);
+  const toSign: Record<string, string | number> = { timestamp };
+  if (params.folder) toSign.folder = params.folder;
+  if (params.publicId) toSign.public_id = params.publicId;
+
+  const signature = cloudinary.utils.api_sign_request(
+    toSign,
+    env.CLOUDINARY_API_SECRET,
+  );
+
+  return {
+    cloudName: env.CLOUDINARY_CLOUD_NAME,
+    apiKey: env.CLOUDINARY_API_KEY,
+    timestamp,
+    signature,
+    folder: params.folder,
+    publicId: params.publicId,
+  };
+}
