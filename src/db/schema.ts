@@ -1,6 +1,11 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-type SocialLink = { label: string; url: string; iconUrl?: string };
+type SocialLink = {
+  label: string;
+  url: string;
+  iconUrl?: string;
+  iconUrlDark?: string;
+};
 
 const id = () =>
   text("id")

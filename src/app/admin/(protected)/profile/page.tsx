@@ -6,7 +6,12 @@ import { UploadButton } from "@/components/admin/upload-button";
 import { client } from "@/lib/rpc";
 import { uploadToCloudinary } from "@/lib/upload";
 
-type SocialLink = { label: string; url: string; iconUrl?: string };
+type SocialLink = {
+  label: string;
+  url: string;
+  iconUrl?: string;
+  iconUrlDark?: string;
+};
 
 type ProfileForm = {
   name: string;
@@ -50,6 +55,7 @@ export default function ProfileAdminPage() {
         label: l.label,
         url: l.url,
         iconUrl: l.iconUrl ?? undefined,
+        iconUrlDark: l.iconUrlDark ?? undefined,
       })),
     });
   }
@@ -87,9 +93,13 @@ export default function ProfileAdminPage() {
     if (res.ok) setForm((f) => ({ ...f, avatarUrl: "" }));
   }
 
-  async function uploadIcon(index: number, file: File) {
+  async function uploadIcon(
+    index: number,
+    file: File,
+    key: "iconUrl" | "iconUrlDark",
+  ) {
     const { url } = await uploadToCloudinary(file, { folder: "mado/social" });
-    setLink(index, { iconUrl: url });
+    setLink(index, { [key]: url });
   }
 
   async function submit(e: React.FormEvent) {
@@ -110,6 +120,7 @@ export default function ProfileAdminPage() {
             label: l.label,
             url: l.url,
             iconUrl: l.iconUrl || undefined,
+            iconUrlDark: l.iconUrlDark || undefined,
           })),
       },
     });
@@ -250,8 +261,15 @@ export default function ProfileAdminPage() {
             <div className="sns-icon">
               {link.iconUrl && <img src={link.iconUrl} alt="" />}
               <UploadButton
-                label="アイコン"
-                onSelect={(file) => uploadIcon(i, file)}
+                label="通常"
+                onSelect={(file) => uploadIcon(i, file, "iconUrl")}
+              />
+            </div>
+            <div className="sns-icon sns-icon--dark">
+              {link.iconUrlDark && <img src={link.iconUrlDark} alt="" />}
+              <UploadButton
+                label="ダーク"
+                onSelect={(file) => uploadIcon(i, file, "iconUrlDark")}
               />
             </div>
             <div className="field">

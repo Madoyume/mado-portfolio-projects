@@ -9,6 +9,7 @@ export const profileInput = createInsertSchema(profile, {
         label: z.string(),
         url: z.string().url(),
         iconUrl: z.string().url().optional(),
+        iconUrlDark: z.string().url().optional(),
       }),
     )
     .nullish(),

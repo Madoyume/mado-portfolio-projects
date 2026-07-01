@@ -248,6 +248,15 @@ h4 {
 .social a:hover .social__icon {
   opacity: 1;
 }
+.social__icon--dark {
+  display: none;
+}
+[data-theme="dark"] .social__icon--light {
+  display: none;
+}
+[data-theme="dark"] .social__icon--dark {
+  display: inline-block;
+}
 
 /* セクション見出し */
 .section {
@@ -977,6 +986,9 @@ h4 {
 .sns-icon .btn {
   padding: 3px 8px;
   font-size: 0.7rem;
+}
+.sns-icon--dark img {
+  background: #1a1a1a;
 }
 
 .hero-setting {

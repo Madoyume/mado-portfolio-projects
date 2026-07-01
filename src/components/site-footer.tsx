@@ -21,11 +21,18 @@ export async function SiteFooter() {
               title={link.label}
             >
               {link.iconUrl ? (
-                <img
-                  src={link.iconUrl}
-                  alt={link.label}
-                  className="social__icon"
-                />
+                <>
+                  <img
+                    src={link.iconUrl}
+                    alt={link.label}
+                    className="social__icon social__icon--light"
+                  />
+                  <img
+                    src={link.iconUrlDark ?? link.iconUrl}
+                    alt={link.label}
+                    className="social__icon social__icon--dark"
+                  />
+                </>
               ) : (
                 link.label
               )}
