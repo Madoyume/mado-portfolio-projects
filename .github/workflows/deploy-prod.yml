@@ -18,8 +18,8 @@ jobs:
     outputs:
       drizzle: ${{ steps.filter.outputs.drizzle }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v3
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
@@ -40,7 +40,7 @@ jobs:
     if: ${{ needs.ci.outputs.drizzle == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3"
@@ -55,10 +55,10 @@ jobs:
     if: ${{ always() && needs.ci.result == 'success' && (needs.migrate.result == 'success' || needs.migrate.result == 'skipped') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3"
-      - run: bun x vercel@latest pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-      - run: bun x vercel@latest build --prod --token=${{ secrets.VERCEL_TOKEN }}
-      - run: bun x vercel@latest deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - run: bun x vercel@54 pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      - run: bun x vercel@54 build --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - run: bun x vercel@54 deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
