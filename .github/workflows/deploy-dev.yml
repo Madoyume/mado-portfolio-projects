@@ -1,0 +1,65 @@
+name: Deploy (dev)
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+
+concurrency:
+  group: deploy-dev-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID_DEV }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID_DEV }}
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    outputs:
+      drizzle: ${{ steps.filter.outputs.drizzle }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            drizzle:
+              - 'drizzle/**'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3"
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bun x tsc --noEmit
+      - run: bun run build
+        env:
+          TURSO_DATABASE_URL: http://127.0.0.1:8080
+
+  migrate:
+    needs: ci
+    if: ${{ github.event_name == 'push' && needs.ci.outputs.drizzle == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3"
+      - run: bun install --frozen-lockfile
+      - run: bun run db:migrate
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL_DEV }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN_DEV }}
+
+  deploy:
+    needs: [ci, migrate]
+    if: ${{ always() && github.event_name == 'push' && needs.ci.result == 'success' && (needs.migrate.result == 'success' || needs.migrate.result == 'skipped') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3"
+      - run: bun x vercel@latest pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN_DEV }}
+      - run: bun x vercel@latest build --token=${{ secrets.VERCEL_TOKEN_DEV }}
+      - run: bun x vercel@latest deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN_DEV }}
