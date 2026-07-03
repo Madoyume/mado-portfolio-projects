@@ -1,12 +1,29 @@
 "use client";
 
-import { useState } from "react";
-import type { getPhotos } from "@/lib/api";
+import type { InferResponseType } from "hono/client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { client } from "@/lib/rpc";
 
-type Photo = Awaited<ReturnType<typeof getPhotos>>[number];
+type Photo = InferResponseType<
+  typeof client.api.photos.$get,
+  200
+>["items"][number];
 
-export function PhotoGallery({ photos }: { photos: Photo[] }) {
+export function PhotoGallery({
+  initialItems,
+  initialCursor,
+  tag,
+}: {
+  initialItems: Photo[];
+  initialCursor: string | null;
+  tag?: string;
+}) {
+  const [photos, setPhotos] = useState(initialItems);
+  const [cursor, setCursor] = useState(initialCursor);
+  const [loading, setLoading] = useState(false);
   const [index, setIndex] = useState<number | null>(null);
+  const sentinel = useRef<HTMLDivElement | null>(null);
+
   const viewable = photos.filter((p) => p.url);
   const current = index !== null ? viewable[index] : null;
 
@@ -14,6 +31,40 @@ export function PhotoGallery({ photos }: { photos: Photo[] }) {
     if (index === null) return;
     setIndex((index + delta + viewable.length) % viewable.length);
   };
+
+  const loadMore = useCallback(async () => {
+    if (!cursor || loading) return;
+    setLoading(true);
+    try {
+      const res = await client.api.photos.$get({
+        query: {
+          limit: "20",
+          cursor,
+          ...(tag ? { tag } : {}),
+        },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPhotos((prev) => [...prev, ...data.items]);
+        setCursor(data.nextCursor);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [cursor, loading, tag]);
+
+  useEffect(() => {
+    const el = sentinel.current;
+    if (!el || !cursor) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) loadMore();
+      },
+      { rootMargin: "400px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [cursor, loadMore]);
 
   return (
     <>
@@ -42,6 +93,9 @@ export function PhotoGallery({ photos }: { photos: Photo[] }) {
           );
         })}
       </div>
+
+      {cursor && <div ref={sentinel} className="gallery__sentinel" />}
+      {loading && <p className="muted">読み込み中…</p>}
 
       {current && (
         <div

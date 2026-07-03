@@ -486,6 +486,57 @@ h4 {
   border-color: var(--fg);
 }
 
+.load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-6);
+}
+.gallery__sentinel {
+  height: 1px;
+}
+
+.tag-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.tag-input input {
+  flex: 1;
+  min-width: 8ch;
+  border: none;
+  padding: 4px;
+  background: transparent;
+  outline: none;
+}
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  padding: 2px 4px 2px 10px;
+  border-radius: 999px;
+  background: var(--fg);
+  color: var(--bg);
+}
+.tag-chip button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font-size: 0.9rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
 .prose {
   font-size: 1.02rem;
   line-height: 1.95;

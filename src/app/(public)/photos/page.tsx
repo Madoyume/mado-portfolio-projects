@@ -1,12 +1,21 @@
+import Link from "next/link";
 import { PhotoGallery } from "@/components/photo-gallery";
-import { getPhotos } from "@/lib/api";
+import { getPhotos, getPhotoTags } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
 export const metadata = { title: "Photos" };
 
-export default async function Photos() {
-  const photos = await getPhotos();
+export default async function Photos({
+  searchParams,
+}: {
+  searchParams: Promise<{ tag?: string }>;
+}) {
+  const { tag } = await searchParams;
+  const [{ items, nextCursor }, tags] = await Promise.all([
+    getPhotos({ tag, limit: 20 }),
+    getPhotoTags(),
+  ]);
 
   return (
     <main className="section container container-wide">
@@ -14,8 +23,32 @@ export default async function Photos() {
         <span className="eyebrow">Gallery</span>
         <h2>写真</h2>
       </div>
-      {photos.length > 0 ? (
-        <PhotoGallery photos={photos} />
+
+      {tags.length > 0 && (
+        <div className="filters">
+          <Link href="/photos" className="tag" aria-pressed={!tag}>
+            すべて
+          </Link>
+          {tags.map((t) => (
+            <Link
+              key={t}
+              href={`/photos?tag=${encodeURIComponent(t)}`}
+              className="tag"
+              aria-pressed={tag === t}
+            >
+              {t}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {items.length > 0 ? (
+        <PhotoGallery
+          key={tag ?? "all"}
+          initialItems={items}
+          initialCursor={nextCursor}
+          tag={tag}
+        />
       ) : (
         <p className="muted">写真がありません。</p>
       )}

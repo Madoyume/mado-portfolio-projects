@@ -8,7 +8,10 @@ import { zJson } from "@/server/validator";
 
 export const skillsRoute = new Hono()
   .get("/", async (c) => {
-    const rows = await db.select().from(skills).orderBy(skills.sortOrder);
+    const rows = await db
+      .select()
+      .from(skills)
+      .orderBy(skills.category, skills.name);
     return c.json(rows);
   })
   .post("/", requireAuth, zJson(skillInput), async (c) => {

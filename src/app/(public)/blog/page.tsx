@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { getPosts } from "@/lib/api";
-import { formatDate } from "@/lib/format";
+import { BlogList } from "@/components/blog-list";
+import { getBlogTags, getPosts } from "@/lib/api";
 
 export const dynamic = "force-dynamic";
 
@@ -12,11 +12,10 @@ export default async function Blog({
   searchParams: Promise<{ tag?: string }>;
 }) {
   const { tag } = await searchParams;
-  const { items } = await getPosts();
-  const tags = [...new Set(items.flatMap((item) => item.tags ?? []))];
-  const filtered = tag
-    ? items.filter((item) => item.tags?.includes(tag))
-    : items;
+  const [{ items, nextCursor }, tags] = await Promise.all([
+    getPosts({ tag, limit: 10 }),
+    getBlogTags(),
+  ]);
 
   return (
     <main className="container">
@@ -44,32 +43,12 @@ export default async function Blog({
           </div>
         )}
 
-        <div className="blog-list">
-          {filtered.map((post) => (
-            <article className="post-row" key={post.id}>
-              <time dateTime={post.publishedAt ?? undefined}>
-                {formatDate(post.publishedAt)}
-              </time>
-              <div>
-                <h3>
-                  <Link href={`/blog/${post.slug}`}>{post.title}</Link>
-                </h3>
-                {post.description && <p>{post.description}</p>}
-                {post.tags && post.tags.length > 0 && (
-                  <div className="tags">
-                    {post.tags.map((t) => (
-                      <span className="tag" key={t}>
-                        {t}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </article>
-          ))}
-        </div>
-
-        {filtered.length === 0 && <p className="muted">記事がありません。</p>}
+        <BlogList
+          key={tag ?? "all"}
+          initialItems={items}
+          initialCursor={nextCursor}
+          tag={tag}
+        />
       </section>
     </main>
   );

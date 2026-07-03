@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
-import { and, desc, eq, isNotNull, lt, lte } from "drizzle-orm";
+import { and, desc, eq, isNotNull, lt, lte, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { db } from "@/db/client";
 import { posts } from "@/db/schema";
@@ -18,6 +18,11 @@ export const blogRoute = new Hono()
       lte(posts.publishedAt, now),
     ];
     if (cursor) conditions.push(lt(posts.publishedAt, cursor));
+    if (tag) {
+      conditions.push(
+        sql`EXISTS (SELECT 1 FROM json_each(${posts.tags}) WHERE value = ${tag})`,
+      );
+    }
 
     const rows = await db
       .select({
@@ -34,12 +39,27 @@ export const blogRoute = new Hono()
       .orderBy(desc(posts.publishedAt))
       .limit(limit + 1);
 
-    const filtered = tag ? rows.filter((r) => r.tags?.includes(tag)) : rows;
-    const items = filtered.slice(0, limit);
+    const items = rows.slice(0, limit);
     const nextCursor =
-      filtered.length > limit ? (items.at(-1)?.publishedAt ?? null) : null;
+      rows.length > limit ? (items.at(-1)?.publishedAt ?? null) : null;
 
     return c.json({ items, nextCursor });
+  })
+  .get("/tags", async (c) => {
+    const now = new Date().toISOString();
+    const rows = await db
+      .select({ tags: posts.tags })
+      .from(posts)
+      .where(
+        and(
+          eq(posts.status, "published"),
+          isNotNull(posts.publishedAt),
+          lte(posts.publishedAt, now),
+        ),
+      );
+    const tags = new Set<string>();
+    for (const row of rows) for (const t of row.tags ?? []) tags.add(t);
+    return c.json([...tags].sort());
   })
   .get("/admin/all", requireAuth, async (c) => {
     const rows = await db.select().from(posts).orderBy(desc(posts.updatedAt));

@@ -3,17 +3,21 @@
 import type { InferResponseType } from "hono/client";
 import { useEffect, useState } from "react";
 import { AdminTopbar } from "@/components/admin/topbar";
+import { TagInput } from "@/components/admin/tag-input";
 import { UploadButton } from "@/components/admin/upload-button";
 import { client } from "@/lib/rpc";
 import { uploadToCloudinary } from "@/lib/upload";
 
-type Photo = InferResponseType<typeof client.api.photos.$get>[number];
+type Photo = InferResponseType<
+  typeof client.api.photos.admin.all.$get,
+  200
+>[number];
 
 type PhotoForm = {
   title: string;
   description: string;
   takenAt: string;
-  sortOrder: number;
+  tags: string[];
 };
 
 export default function PhotosAdminPage() {
@@ -24,11 +28,11 @@ export default function PhotosAdminPage() {
     title: "",
     description: "",
     takenAt: "",
-    sortOrder: 0,
+    tags: [],
   });
 
   async function load() {
-    const res = await client.api.photos.$get();
+    const res = await client.api.photos.admin.all.$get();
     if (res.ok) setItems(await res.json());
   }
 
@@ -57,7 +61,7 @@ export default function PhotosAdminPage() {
       title: photo.title ?? "",
       description: photo.description ?? "",
       takenAt: photo.takenAt ?? "",
-      sortOrder: photo.sortOrder,
+      tags: photo.tags ?? [],
     });
   }
 
@@ -70,7 +74,7 @@ export default function PhotosAdminPage() {
         title: form.title || null,
         description: form.description || null,
         takenAt: form.takenAt || null,
-        sortOrder: form.sortOrder,
+        tags: form.tags,
       },
     });
     if (res.ok) {
@@ -137,28 +141,24 @@ export default function PhotosAdminPage() {
               }
             />
           </div>
-          <div className="field-row">
-            <div className="field">
-              <label htmlFor="edit-takenAt">撮影日</label>
-              <input
-                id="edit-takenAt"
-                type="text"
-                placeholder="2026-06-18"
-                value={form.takenAt}
-                onChange={(e) => setForm({ ...form, takenAt: e.target.value })}
-              />
-            </div>
-            <div className="field">
-              <label htmlFor="edit-sortOrder">表示順</label>
-              <input
-                id="edit-sortOrder"
-                type="number"
-                value={form.sortOrder}
-                onChange={(e) =>
-                  setForm({ ...form, sortOrder: Number(e.target.value) })
-                }
-              />
-            </div>
+          <div className="field">
+            <label htmlFor="edit-takenAt">撮影日</label>
+            <input
+              id="edit-takenAt"
+              type="text"
+              placeholder="2026-06-18"
+              value={form.takenAt}
+              onChange={(e) => setForm({ ...form, takenAt: e.target.value })}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="edit-tags">タグ</label>
+            <TagInput
+              id="edit-tags"
+              value={form.tags}
+              onChange={(tags) => setForm({ ...form, tags })}
+              placeholder="Enter で追加"
+            />
           </div>
           <div style={{ display: "flex", gap: "var(--space-3)" }}>
             <button type="submit" className="btn">

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { db } from "@/db/client";
 import { careers } from "@/db/schema";
@@ -8,7 +8,10 @@ import { zJson } from "@/server/validator";
 
 export const careersRoute = new Hono()
   .get("/", async (c) => {
-    const rows = await db.select().from(careers).orderBy(careers.sortOrder);
+    const rows = await db
+      .select()
+      .from(careers)
+      .orderBy(desc(careers.startedAt));
     return c.json(rows);
   })
   .post("/", requireAuth, zJson(careerInput), async (c) => {

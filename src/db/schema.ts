@@ -34,7 +34,6 @@ export const careers = sqliteTable("careers", {
   description: text("description"),
   startedAt: text("started_at").notNull(),
   endedAt: text("ended_at"),
-  sortOrder: integer("sort_order").notNull().default(0),
 });
 
 export const skills = sqliteTable("skills", {
@@ -42,7 +41,6 @@ export const skills = sqliteTable("skills", {
   name: text("name").notNull(),
   category: text("category").notNull(),
   level: integer("level"),
-  sortOrder: integer("sort_order").notNull().default(0),
 });
 
 export const posts = sqliteTable("posts", {
@@ -70,7 +68,7 @@ export const photos = sqliteTable("photos", {
   width: integer("width"),
   height: integer("height"),
   takenAt: text("taken_at"),
-  sortOrder: integer("sort_order").notNull().default(0),
+  tags: text("tags", { mode: "json" }).$type<string[]>(),
   createdAt: text("created_at").notNull().$defaultFn(now),
 });
 

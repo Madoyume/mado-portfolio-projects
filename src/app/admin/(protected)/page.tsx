@@ -6,15 +6,15 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
   const [posts, photos, skills, careers] = await Promise.all([
-    getPosts(),
-    getPhotos(),
+    getPosts({ limit: 100 }),
+    getPhotos({ limit: 100 }),
     getSkills(),
     getCareers(),
   ]);
 
   const cards = [
     { num: posts.items.length, label: "公開記事" },
-    { num: photos.length, label: "写真" },
+    { num: photos.items.length, label: "写真" },
     { num: skills.length, label: "スキル" },
     { num: careers.length, label: "経歴" },
   ];

@@ -14,7 +14,6 @@ const blank: CareerForm = {
   description: "",
   startedAt: "",
   endedAt: "",
-  sortOrder: 0,
 };
 
 export default function CareersAdminPage() {
@@ -69,7 +68,6 @@ export default function CareersAdminPage() {
       description: career.description ?? "",
       startedAt: career.startedAt,
       endedAt: career.endedAt ?? "",
-      sortOrder: career.sortOrder,
     });
   }
 
@@ -184,17 +182,6 @@ export default function CareersAdminPage() {
                 onChange={(e) => setForm({ ...form, endedAt: e.target.value })}
               />
             </div>
-          </div>
-          <div className="field">
-            <label htmlFor="sortOrder">表示順</label>
-            <input
-              id="sortOrder"
-              type="number"
-              value={form.sortOrder ?? 0}
-              onChange={(e) =>
-                setForm({ ...form, sortOrder: Number(e.target.value) })
-              }
-            />
           </div>
           {error && <p className="form-error">{error}</p>}
           <div style={{ display: "flex", gap: "var(--space-3)" }}>

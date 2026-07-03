@@ -7,11 +7,11 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const [profile, photos, posts] = await Promise.all([
     getProfile(),
-    getPhotos(),
-    getPosts(),
+    getPhotos({ limit: 3 }),
+    getPosts({ limit: 3 }),
   ]);
-  const topPhotos = photos.slice(0, 3);
-  const latest = posts.items.slice(0, 3);
+  const topPhotos = photos.items;
+  const latest = posts.items;
 
   return (
     <main>
