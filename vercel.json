@@ -3,6 +3,7 @@
   "bunVersion": "1.x",
   "git": {
     "deploymentEnabled": {
+      "main": false,
       "dev": false,
       "local": false
     }
