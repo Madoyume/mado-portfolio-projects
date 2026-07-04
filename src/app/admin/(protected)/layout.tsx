@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/sidebar";
+import { UnsavedGuardProvider } from "@/components/admin/unsaved-guard";
 import { verifySession } from "@/lib/session";
 
 export default async function ProtectedAdminLayout({
@@ -15,8 +16,10 @@ export default async function ProtectedAdminLayout({
 
   return (
     <div className="admin">
-      <AdminSidebar />
-      {children}
+      <UnsavedGuardProvider>
+        <AdminSidebar />
+        {children}
+      </UnsavedGuardProvider>
     </div>
   );
 }

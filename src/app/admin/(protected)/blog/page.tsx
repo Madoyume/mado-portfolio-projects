@@ -3,7 +3,9 @@
 import type { InferRequestType, InferResponseType } from "hono/client";
 import { useEffect, useRef, useState } from "react";
 import { AdminTopbar } from "@/components/admin/topbar";
+import { Modal } from "@/components/admin/modal";
 import { TagInput } from "@/components/admin/tag-input";
+import { useUnsavedGuard } from "@/components/admin/unsaved-guard";
 import { UploadButton } from "@/components/admin/upload-button";
 import { MarkdownContent } from "@/components/markdown";
 import { formatDate } from "@/lib/format";
@@ -15,6 +17,10 @@ type Post = InferResponseType<
   200
 >[number];
 type PostJson = InferRequestType<typeof client.api.blog.$post>["json"];
+type BlogImage = InferResponseType<
+  (typeof client.api.uploads.blog)[":slug"]["images"]["$get"],
+  200
+>[number];
 
 type PostForm = {
   slug: string;
@@ -41,10 +47,16 @@ const blank: PostForm = {
 export default function BlogAdminPage() {
   const [items, setItems] = useState<Post[]>([]);
   const [form, setForm] = useState<PostForm>(blank);
+  const [baseline, setBaseline] = useState<PostForm>(blank);
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [inserting, setInserting] = useState(false);
+  const [imagesOpen, setImagesOpen] = useState(false);
+  const [images, setImages] = useState<BlogImage[]>([]);
+  const [imagesLoading, setImagesLoading] = useState(false);
+  const [imagesError, setImagesError] = useState("");
   const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const { setGuard } = useUnsavedGuard();
 
   async function load() {
     const res = await client.api.blog.admin.all.$get();
@@ -55,16 +67,71 @@ export default function BlogAdminPage() {
     load();
   }, []);
 
+  async function persist(data: PostForm, editing: string | null) {
+    const slug = data.slug.trim();
+    if (!/^[a-z0-9-]+$/.test(slug) || !data.title || !data.body) return 0;
+    const publishedAt =
+      data.status === "published" && !data.publishedAt
+        ? new Date().toISOString()
+        : data.publishedAt || null;
+    const json: PostJson = {
+      slug,
+      title: data.title,
+      description: data.description || null,
+      body: data.body,
+      coverImageUrl: data.coverImageUrl || null,
+      status: data.status,
+      publishedAt,
+      tags: data.tags,
+    };
+    const res = editing
+      ? await client.api.blog[":slug"].$put({ param: { slug: editing }, json })
+      : await client.api.blog.$post({ json });
+    if (res.ok) {
+      const saved = { ...data, slug, publishedAt: publishedAt ?? "" };
+      setBaseline(saved);
+      setForm(saved);
+      setEditingSlug(slug);
+      await load();
+    }
+    return res.status;
+  }
+
+  const guardRef = useRef<{
+    isDirty: () => boolean;
+    save: () => Promise<boolean>;
+  }>({
+    isDirty: () => false,
+    save: async () => false,
+  });
+
+  useEffect(() => {
+    guardRef.current = {
+      isDirty: () => JSON.stringify(form) !== JSON.stringify(baseline),
+      save: async () => {
+        const status = await persist(form, editingSlug);
+        return status >= 200 && status < 300;
+      },
+    };
+  });
+
+  useEffect(() => {
+    setGuard({
+      isDirty: () => guardRef.current.isDirty(),
+      save: () => guardRef.current.save(),
+    });
+    return () => setGuard(null);
+  }, [setGuard]);
+
   function reset() {
     setForm(blank);
+    setBaseline(blank);
     setEditingSlug(null);
     setError("");
   }
 
   function edit(post: Post) {
-    setEditingSlug(post.slug);
-    setError("");
-    setForm({
+    const loaded: PostForm = {
       slug: post.slug,
       title: post.title,
       description: post.description ?? "",
@@ -73,7 +140,56 @@ export default function BlogAdminPage() {
       tags: post.tags ?? [],
       status: post.status,
       publishedAt: post.publishedAt ?? "",
+    };
+    setEditingSlug(post.slug);
+    setError("");
+    setForm(loaded);
+    setBaseline(loaded);
+  }
+
+  async function openImages() {
+    const slug = form.slug.trim();
+    if (!/^[a-z0-9-]+$/.test(slug)) {
+      setError(
+        "アップロード済み画像を表示するには、先に slug を入力してください。",
+      );
+      return;
+    }
+    setImagesOpen(true);
+    setImagesLoading(true);
+    setImagesError("");
+    setImages([]);
+    try {
+      const res = await client.api.uploads.blog[":slug"].images.$get({
+        param: { slug },
+      });
+      if (res.ok) setImages(await res.json());
+      else setImagesError("画像の取得に失敗しました。");
+    } catch {
+      setImagesError("画像の取得に失敗しました。");
+    } finally {
+      setImagesLoading(false);
+    }
+  }
+
+  async function copyUrl(url: string) {
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {}
+  }
+
+  async function deleteImage(publicId: string) {
+    const slug = form.slug.trim();
+    if (!window.confirm("この画像を削除しますか？")) return;
+    const res = await client.api.uploads.blog[":slug"].image.$delete({
+      param: { slug },
+      json: { publicId },
     });
+    if (res.ok) {
+      setImages((prev) => prev.filter((img) => img.publicId !== publicId));
+    } else {
+      setImagesError("画像の削除に失敗しました。");
+    }
   }
 
   async function uploadCover(file: File) {
@@ -124,31 +240,15 @@ export default function BlogAdminPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    const publishedAt =
-      form.status === "published" && !form.publishedAt
-        ? new Date().toISOString()
-        : form.publishedAt || null;
-    const json: PostJson = {
-      slug: form.slug,
-      title: form.title,
-      description: form.description || null,
-      body: form.body,
-      coverImageUrl: form.coverImageUrl || null,
-      status: form.status,
-      publishedAt,
-      tags: form.tags,
-    };
-    const res = editingSlug
-      ? await client.api.blog[":slug"].$put({
-          param: { slug: editingSlug },
-          json,
-        })
-      : await client.api.blog.$post({ json });
-    if (res.ok) {
+    const status = await persist(form, editingSlug);
+    if (status >= 200 && status < 300) {
       reset();
-      await load();
-    } else if (res.status === 409) {
+    } else if (status === 409) {
       setError("その slug は既に使われています。");
+    } else if (status === 0) {
+      setError(
+        "slug（英小文字・数字・ハイフン）・タイトル・本文を入力してください。",
+      );
     } else {
       setError("保存に失敗しました。入力を確認してください。");
     }
@@ -254,11 +354,20 @@ export default function BlogAdminPage() {
         <div className="field">
           <div className="editor-head">
             <label htmlFor="body">本文 (Markdown)</label>
-            <UploadButton
-              label={inserting ? "挿入中…" : "本文に画像を挿入"}
-              disabled={inserting}
-              onSelect={insertImage}
-            />
+            <div className="editor-head__actions">
+              <UploadButton
+                label={inserting ? "挿入中…" : "本文に画像を挿入"}
+                disabled={inserting}
+                onSelect={insertImage}
+              />
+              <button
+                type="button"
+                className="btn btn--ghost btn--sm"
+                onClick={openImages}
+              >
+                アップロード済み画像
+              </button>
+            </div>
           </div>
           <div className="editor-2pane">
             <textarea
@@ -362,6 +471,96 @@ export default function BlogAdminPage() {
           )}
         </div>
       </form>
+
+      {imagesOpen && (
+        <Modal wide onClose={() => setImagesOpen(false)}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 16,
+              marginBottom: 24,
+            }}
+          >
+            <h2 style={{ fontSize: "1.2rem" }}>アップロード済み画像</h2>
+            <button
+              type="button"
+              className="btn btn--ghost btn--sm"
+              onClick={() => setImagesOpen(false)}
+            >
+              閉じる
+            </button>
+          </div>
+          {imagesLoading && <p className="muted">読み込み中…</p>}
+          {imagesError && <p className="form-error">{imagesError}</p>}
+          {!imagesLoading && !imagesError && images.length === 0 && (
+            <p className="muted">
+              この記事にアップロードされた画像はありません。
+            </p>
+          )}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+              gap: 16,
+            }}
+          >
+            {images.map((img) => (
+              <figure
+                key={img.publicId}
+                style={{ display: "flex", flexDirection: "column", gap: 8 }}
+              >
+                <img
+                  src={img.url}
+                  alt=""
+                  loading="lazy"
+                  style={{
+                    width: "100%",
+                    aspectRatio: "4 / 3",
+                    objectFit: "cover",
+                    borderRadius: 8,
+                    border: "1px solid var(--border)",
+                  }}
+                />
+                <input
+                  type="text"
+                  readOnly
+                  value={img.url}
+                  onFocus={(e) => e.target.select()}
+                  style={{ fontSize: "0.75rem", width: "100%" }}
+                />
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  <button
+                    type="button"
+                    className="btn btn--sm"
+                    onClick={() => {
+                      insertAtCursor(`\n![](${img.url})\n`);
+                      setImagesOpen(false);
+                    }}
+                  >
+                    本文に挿入
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--ghost btn--sm"
+                    onClick={() => copyUrl(img.url)}
+                  >
+                    URLコピー
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--danger btn--sm"
+                    onClick={() => deleteImage(img.publicId)}
+                  >
+                    削除
+                  </button>
+                </div>
+              </figure>
+            ))}
+          </div>
+        </Modal>
+      )}
     </main>
   );
 }

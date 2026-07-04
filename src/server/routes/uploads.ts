@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { signUpload } from "@/lib/cloudinary";
+import { deleteImage, listImages, signUpload } from "@/lib/cloudinary";
 import { requireAuth } from "@/server/middleware/auth";
 import { zJson } from "@/server/validator";
 
@@ -9,11 +9,10 @@ const signInput = z.object({
   publicId: z.string().optional(),
 });
 
-export const uploadsRoute = new Hono().post(
-  "/sign",
-  requireAuth,
-  zJson(signInput),
-  (c) => {
+const deleteInput = z.object({ publicId: z.string() });
+
+export const uploadsRoute = new Hono()
+  .post("/sign", requireAuth, zJson(signInput), (c) => {
     try {
       return c.json(signUpload(c.req.valid("json")));
     } catch (err) {
@@ -22,5 +21,24 @@ export const uploadsRoute = new Hono().post(
       }
       throw err;
     }
-  },
-);
+  })
+  .get("/blog/:slug/images", requireAuth, async (c) => {
+    const slug = c.req.param("slug");
+    if (!/^[a-z0-9-]+$/.test(slug)) {
+      return c.json({ message: "invalid slug" }, 400);
+    }
+    const images = await listImages(`mado/blog/${slug}`);
+    return c.json(images);
+  })
+  .delete("/blog/:slug/image", requireAuth, zJson(deleteInput), async (c) => {
+    const slug = c.req.param("slug");
+    const { publicId } = c.req.valid("json");
+    if (!/^[a-z0-9-]+$/.test(slug)) {
+      return c.json({ message: "invalid slug" }, 400);
+    }
+    if (!publicId.startsWith(`mado/blog/${slug}/`)) {
+      return c.json({ message: "not allowed" }, 400);
+    }
+    await deleteImage(publicId);
+    return c.body(null, 204);
+  });

@@ -1,7 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import {
+  GuardedLink,
+  useUnsavedGuard,
+} from "@/components/admin/unsaved-guard";
 import { client } from "@/lib/rpc";
 
 const items = [
@@ -16,6 +19,7 @@ const items = [
 export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { run } = useUnsavedGuard();
 
   const isActive = (href: string) =>
     href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
@@ -34,19 +38,19 @@ export function AdminSidebar() {
       <ul className="admin__nav">
         {items.map((item) => (
           <li key={item.href}>
-            <Link
+            <GuardedLink
               href={item.href}
               aria-current={isActive(item.href) ? "page" : undefined}
             >
               {item.label}
-            </Link>
+            </GuardedLink>
           </li>
         ))}
       </ul>
       <button
         type="button"
         className="btn btn--ghost btn--sm admin__logout"
-        onClick={logout}
+        onClick={() => run(logout)}
       >
         ログアウト
       </button>

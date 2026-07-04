@@ -41,6 +41,39 @@ export async function deleteImage(publicId: string) {
   await c.uploader.destroy(publicId, { resource_type: "image" });
 }
 
+export type BlogImage = {
+  url: string;
+  publicId: string;
+  width: number | null;
+  height: number | null;
+  createdAt: string | null;
+};
+
+export async function listImages(folder: string): Promise<BlogImage[]> {
+  const c = configure();
+  const prefix = folder.endsWith("/") ? folder : `${folder}/`;
+  const res = await c.api.resources({
+    type: "upload",
+    prefix,
+    max_results: 100,
+  });
+  return (res.resources ?? []).map(
+    (r: {
+      secure_url: string;
+      public_id: string;
+      width?: number;
+      height?: number;
+      created_at?: string;
+    }) => ({
+      url: r.secure_url,
+      publicId: r.public_id,
+      width: r.width ?? null,
+      height: r.height ?? null,
+      createdAt: r.created_at ?? null,
+    }),
+  );
+}
+
 export function imageUrl(publicId: string) {
   const cloud = process.env.CLOUDINARY_CLOUD_NAME;
   return cloud

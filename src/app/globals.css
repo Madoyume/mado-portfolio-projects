@@ -544,6 +544,70 @@ h4 {
   gap: var(--space-3);
   margin-bottom: var(--space-2);
 }
+.editor-head__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgba(0, 0, 0, 0.5);
+}
+.modal {
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: var(--space-5);
+  border-radius: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+.modal--wide {
+  max-width: 860px;
+}
+.modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+.image-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+.image-picker figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.image-picker img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+.image-picker input {
+  font-size: 0.75rem;
+}
+.image-picker__actions {
+  display: flex;
+  gap: var(--space-2);
+}
 .editor-2pane {
   display: grid;
   grid-template-columns: 1fr 1fr;
