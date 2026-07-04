@@ -537,6 +537,37 @@ h4 {
   cursor: pointer;
 }
 
+.editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+.editor-2pane {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+.editor-2pane textarea {
+  min-height: 420px;
+  resize: vertical;
+  font-family: var(--font-mono, ui-monospace, monospace);
+}
+.editor-preview {
+  min-height: 420px;
+  max-height: 640px;
+  overflow-y: auto;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+@media (max-width: 720px) {
+  .editor-2pane {
+    grid-template-columns: 1fr;
+  }
+}
+
 .prose {
   font-size: 1.02rem;
   line-height: 1.95;

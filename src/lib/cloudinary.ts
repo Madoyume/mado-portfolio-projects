@@ -50,10 +50,15 @@ export function imageUrl(publicId: string) {
 
 const ALLOWED_FOLDERS = ["mado/photos", "mado/social", "mado/blog"];
 const ALLOWED_PUBLIC_IDS = ["mado/hero", "mado/avatar"];
+const BLOG_SLUG_FOLDER = /^mado\/blog\/[a-z0-9-]+$/;
+
+function isFolderAllowed(folder: string) {
+  return ALLOWED_FOLDERS.includes(folder) || BLOG_SLUG_FOLDER.test(folder);
+}
 
 export function signUpload(params: { folder?: string; publicId?: string }) {
   const env = getCloudinaryEnv();
-  if (params.folder && !ALLOWED_FOLDERS.includes(params.folder)) {
+  if (params.folder && !isFolderAllowed(params.folder)) {
     throw new Error("folder not allowed");
   }
   if (params.publicId && !ALLOWED_PUBLIC_IDS.includes(params.publicId)) {

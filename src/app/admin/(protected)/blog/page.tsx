@@ -1,9 +1,11 @@
 "use client";
 
 import type { InferRequestType, InferResponseType } from "hono/client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AdminTopbar } from "@/components/admin/topbar";
+import { TagInput } from "@/components/admin/tag-input";
 import { UploadButton } from "@/components/admin/upload-button";
+import { MarkdownContent } from "@/components/markdown";
 import { formatDate } from "@/lib/format";
 import { client } from "@/lib/rpc";
 import { uploadToCloudinary } from "@/lib/upload";
@@ -20,7 +22,7 @@ type PostForm = {
   description: string;
   body: string;
   coverImageUrl: string;
-  tags: string;
+  tags: string[];
   status: "draft" | "published";
   publishedAt: string;
 };
@@ -31,7 +33,7 @@ const blank: PostForm = {
   description: "",
   body: "",
   coverImageUrl: "",
-  tags: "",
+  tags: [],
   status: "draft",
   publishedAt: "",
 };
@@ -41,6 +43,8 @@ export default function BlogAdminPage() {
   const [form, setForm] = useState<PostForm>(blank);
   const [editingSlug, setEditingSlug] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [inserting, setInserting] = useState(false);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
 
   async function load() {
     const res = await client.api.blog.admin.all.$get();
@@ -66,7 +70,7 @@ export default function BlogAdminPage() {
       description: post.description ?? "",
       body: post.body,
       coverImageUrl: post.coverImageUrl ?? "",
-      tags: (post.tags ?? []).join(", "),
+      tags: post.tags ?? [],
       status: post.status,
       publishedAt: post.publishedAt ?? "",
     });
@@ -75,6 +79,46 @@ export default function BlogAdminPage() {
   async function uploadCover(file: File) {
     const { url } = await uploadToCloudinary(file, { folder: "mado/blog" });
     setForm((f) => ({ ...f, coverImageUrl: url }));
+  }
+
+  function insertAtCursor(text: string) {
+    const ta = bodyRef.current;
+    if (!ta) {
+      setForm((f) => ({ ...f, body: f.body + text }));
+      return;
+    }
+    const { selectionStart: start, selectionEnd: end } = ta;
+    setForm((f) => ({
+      ...f,
+      body: f.body.slice(0, start) + text + f.body.slice(end),
+    }));
+    requestAnimationFrame(() => {
+      ta.focus();
+      const pos = start + text.length;
+      ta.setSelectionRange(pos, pos);
+    });
+  }
+
+  async function insertImage(file: File) {
+    const slug = form.slug.trim();
+    if (!/^[a-z0-9-]+$/.test(slug)) {
+      setError(
+        "本文に画像を挿入するには、先に slug（英小文字・数字・ハイフン）を入力してください。",
+      );
+      return;
+    }
+    setInserting(true);
+    setError("");
+    try {
+      const { url } = await uploadToCloudinary(file, {
+        folder: `mado/blog/${slug}`,
+      });
+      insertAtCursor(`\n![](${url})\n`);
+    } catch {
+      setError("画像のアップロードに失敗しました。");
+    } finally {
+      setInserting(false);
+    }
   }
 
   async function submit(e: React.FormEvent) {
@@ -92,10 +136,7 @@ export default function BlogAdminPage() {
       coverImageUrl: form.coverImageUrl || null,
       status: form.status,
       publishedAt,
-      tags: form.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
+      tags: form.tags,
     };
     const res = editingSlug
       ? await client.api.blog[":slug"].$put({
@@ -196,6 +237,9 @@ export default function BlogAdminPage() {
               onChange={(e) => setForm({ ...form, slug: e.target.value })}
               required
             />
+            <p className="field__hint">
+              本文への画像挿入には slug が必要です（保存先 mado/blog/&#123;slug&#125;）。
+            </p>
           </div>
         </div>
         <div className="field">
@@ -208,23 +252,38 @@ export default function BlogAdminPage() {
           />
         </div>
         <div className="field">
-          <label htmlFor="body">本文 (Markdown)</label>
-          <textarea
-            id="body"
-            style={{ minHeight: 320 }}
-            value={form.body}
-            onChange={(e) => setForm({ ...form, body: e.target.value })}
-            required
-          />
+          <div className="editor-head">
+            <label htmlFor="body">本文 (Markdown)</label>
+            <UploadButton
+              label={inserting ? "挿入中…" : "本文に画像を挿入"}
+              disabled={inserting}
+              onSelect={insertImage}
+            />
+          </div>
+          <div className="editor-2pane">
+            <textarea
+              id="body"
+              ref={bodyRef}
+              value={form.body}
+              onChange={(e) => setForm({ ...form, body: e.target.value })}
+              required
+            />
+            <div className="editor-preview prose">
+              {form.body ? (
+                <MarkdownContent>{form.body}</MarkdownContent>
+              ) : (
+                <p className="muted">プレビューがここに表示されます。</p>
+              )}
+            </div>
+          </div>
         </div>
         <div className="field">
-          <label htmlFor="tags">タグ (カンマ区切り)</label>
-          <input
+          <label htmlFor="tags">タグ</label>
+          <TagInput
             id="tags"
-            type="text"
-            placeholder="Next.js, Hono"
             value={form.tags}
-            onChange={(e) => setForm({ ...form, tags: e.target.value })}
+            onChange={(tags) => setForm({ ...form, tags })}
+            placeholder="Enter で追加"
           />
         </div>
         <div className="field image-field">
