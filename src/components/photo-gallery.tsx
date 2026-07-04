@@ -2,6 +2,7 @@
 
 import type { InferResponseType } from "hono/client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { PHOTOS_PAGE_SIZE } from "@/lib/constants";
 import { client } from "@/lib/rpc";
 
 type Photo = InferResponseType<
@@ -38,7 +39,7 @@ export function PhotoGallery({
     try {
       const res = await client.api.photos.$get({
         query: {
-          limit: "20",
+          limit: String(PHOTOS_PAGE_SIZE),
           cursor,
           ...(tag ? { tag } : {}),
         },

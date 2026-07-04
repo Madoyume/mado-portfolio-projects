@@ -3,6 +3,7 @@
 import type { InferResponseType } from "hono/client";
 import Link from "next/link";
 import { useState } from "react";
+import { BLOG_PAGE_SIZE } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
 import { client } from "@/lib/rpc";
 
@@ -30,7 +31,7 @@ export function BlogList({
     try {
       const res = await client.api.blog.$get({
         query: {
-          limit: "10",
+          limit: String(BLOG_PAGE_SIZE),
           cursor,
           ...(tag ? { tag } : {}),
         },

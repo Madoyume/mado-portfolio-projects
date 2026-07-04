@@ -1,10 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import {
-  GuardedLink,
-  useUnsavedGuard,
-} from "@/components/admin/unsaved-guard";
+import { GuardedLink, useUnsavedGuard } from "@/components/admin/unsaved-guard";
 import { client } from "@/lib/rpc";
 
 const items = [

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getPhotos, getPosts, getProfile } from "@/lib/api";
+import { HOME_FEATURED_LIMIT } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -7,8 +8,8 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const [profile, photos, posts] = await Promise.all([
     getProfile(),
-    getPhotos({ limit: 3 }),
-    getPosts({ limit: 3 }),
+    getPhotos({ limit: HOME_FEATURED_LIMIT }),
+    getPosts({ limit: HOME_FEATURED_LIMIT }),
   ]);
   const topPhotos = photos.items;
   const latest = posts.items;

@@ -1,3 +1,5 @@
+import { CLOUDINARY_API_BASE } from "./constants";
+
 type UploadOptions = { folder?: string; publicId?: string };
 
 export async function uploadToCloudinary(
@@ -22,7 +24,7 @@ export async function uploadToCloudinary(
   if (publicId) form.append("public_id", publicId);
 
   const uploadRes = await fetch(
-    `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+    `${CLOUDINARY_API_BASE}/${cloudName}/image/upload`,
     { method: "POST", body: form },
   );
   if (!uploadRes.ok) throw new Error("failed to upload");

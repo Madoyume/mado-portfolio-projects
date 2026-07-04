@@ -214,9 +214,7 @@
       "indexes": {
         "posts_slug_unique": {
           "name": "posts_slug_unique",
-          "columns": [
-            "slug"
-          ],
+          "columns": ["slug"],
           "isUnique": true
         }
       },

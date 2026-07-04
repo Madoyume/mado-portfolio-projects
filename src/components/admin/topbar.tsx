@@ -1,5 +1,5 @@
-import { ThemeToggle } from "@/components/theme-toggle";
 import { GuardedLink } from "@/components/admin/unsaved-guard";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function AdminTopbar({ title }: { title: string }) {
   return (

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PhotoGallery } from "@/components/photo-gallery";
 import { getPhotos, getPhotoTags } from "@/lib/api";
+import { PHOTOS_PAGE_SIZE } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ export default async function Photos({
 }) {
   const { tag } = await searchParams;
   const [{ items, nextCursor }, tags] = await Promise.all([
-    getPhotos({ tag, limit: 20 }),
+    getPhotos({ tag, limit: PHOTOS_PAGE_SIZE }),
     getPhotoTags(),
   ]);
 

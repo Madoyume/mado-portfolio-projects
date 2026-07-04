@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import { AdminTopbar } from "@/components/admin/topbar";
 import { UploadButton } from "@/components/admin/upload-button";
+import {
+  AVATAR_PUBLIC_ID,
+  HERO_PUBLIC_ID,
+  SOCIAL_FOLDER,
+} from "@/lib/constants";
 import { client } from "@/lib/rpc";
 import { uploadToCloudinary } from "@/lib/upload";
 
@@ -74,7 +79,9 @@ export default function ProfileAdminPage() {
   }
 
   async function uploadHero(file: File) {
-    const { url } = await uploadToCloudinary(file, { publicId: "mado/hero" });
+    const { url } = await uploadToCloudinary(file, {
+      publicId: HERO_PUBLIC_ID,
+    });
     setForm((f) => ({ ...f, heroImageUrl: url }));
   }
 
@@ -84,7 +91,9 @@ export default function ProfileAdminPage() {
   }
 
   async function uploadAvatar(file: File) {
-    const { url } = await uploadToCloudinary(file, { publicId: "mado/avatar" });
+    const { url } = await uploadToCloudinary(file, {
+      publicId: AVATAR_PUBLIC_ID,
+    });
     setForm((f) => ({ ...f, avatarUrl: url }));
   }
 
@@ -98,7 +107,7 @@ export default function ProfileAdminPage() {
     file: File,
     key: "iconUrl" | "iconUrlDark",
   ) {
-    const { url } = await uploadToCloudinary(file, { folder: "mado/social" });
+    const { url } = await uploadToCloudinary(file, { folder: SOCIAL_FOLDER });
     setLink(index, { [key]: url });
   }
 

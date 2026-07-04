@@ -1,6 +1,15 @@
 import { v2 as cloudinary } from "cloudinary";
+import {
+  AVATAR_PUBLIC_ID,
+  BLOG_FOLDER,
+  BLOG_IMAGE_LIST_MAX,
+  CLOUDINARY_DELIVERY_BASE,
+  HERO_PUBLIC_ID,
+  PHOTOS_FOLDER,
+  SLUG_PATTERN,
+  SOCIAL_FOLDER,
+} from "./constants";
 import { getCloudinaryEnv } from "./env";
-import { PHOTOS_FOLDER } from "./photo";
 
 function configure() {
   const env = getCloudinaryEnv();
@@ -56,7 +65,7 @@ export async function listImages(folder: string): Promise<BlogImage[]> {
   const res = await c.api.resources({
     type: "upload",
     prefix,
-    max_results: 100,
+    max_results: BLOG_IMAGE_LIST_MAX,
   });
   return (res.resources ?? []).map(
     (r: {
@@ -78,13 +87,13 @@ export async function listImages(folder: string): Promise<BlogImage[]> {
 export function imageUrl(publicId: string) {
   const cloud = process.env.CLOUDINARY_CLOUD_NAME;
   return cloud
-    ? `https://res.cloudinary.com/${cloud}/image/upload/${publicId}`
+    ? `${CLOUDINARY_DELIVERY_BASE}/${cloud}/image/upload/${publicId}`
     : null;
 }
 
-const ALLOWED_FOLDERS = [PHOTOS_FOLDER, "mado/social", "mado/blog"];
-const ALLOWED_PUBLIC_IDS = ["mado/hero", "mado/avatar"];
-const BLOG_SLUG_FOLDER = /^mado\/blog\/[a-z0-9-]+$/;
+const ALLOWED_FOLDERS = [PHOTOS_FOLDER, SOCIAL_FOLDER, BLOG_FOLDER];
+const ALLOWED_PUBLIC_IDS = [HERO_PUBLIC_ID, AVATAR_PUBLIC_ID];
+const BLOG_SLUG_FOLDER = new RegExp(`^${BLOG_FOLDER}/${SLUG_PATTERN}$`);
 
 function isFolderAllowed(folder: string) {
   return ALLOWED_FOLDERS.includes(folder) || BLOG_SLUG_FOLDER.test(folder);

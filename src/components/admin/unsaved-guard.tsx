@@ -64,10 +64,7 @@ export function UnsavedGuardProvider({
     guardRef.current = guard;
   }, []);
 
-  const isBlocking = useCallback(
-    () => !!guardRef.current?.isDirty(),
-    [],
-  );
+  const isBlocking = useCallback(() => !!guardRef.current?.isDirty(), []);
 
   const run = useCallback((action: () => void) => {
     if (guardRef.current?.isDirty()) {

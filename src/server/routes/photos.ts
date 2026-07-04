@@ -68,7 +68,10 @@ export const photosRoute = new Hono()
     const input = c.req.valid("json");
     const [row] = await db
       .insert(photos)
-      .values({ ...input, cloudinaryPublicId: toPhotoId(input.cloudinaryPublicId) })
+      .values({
+        ...input,
+        cloudinaryPublicId: toPhotoId(input.cloudinaryPublicId),
+      })
       .returning();
     return c.json(
       { ...row, url: imageUrl(photoPublicId(row.cloudinaryPublicId)) },
@@ -86,7 +89,10 @@ export const photosRoute = new Hono()
       .where(eq(photos.id, c.req.param("id")))
       .returning();
     if (!row) return c.json({ message: "photo not found" }, 404);
-    return c.json({ ...row, url: imageUrl(photoPublicId(row.cloudinaryPublicId)) });
+    return c.json({
+      ...row,
+      url: imageUrl(photoPublicId(row.cloudinaryPublicId)),
+    });
   })
   .delete("/:id", requireAuth, async (c) => {
     const [row] = await db

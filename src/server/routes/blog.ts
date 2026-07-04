@@ -3,6 +3,7 @@ import { and, desc, eq, isNotNull, lt, lte, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { db } from "@/db/client";
 import { posts } from "@/db/schema";
+import { POST_STATUS } from "@/lib/constants";
 import { postInput, postListQuery } from "@/schemas/post";
 import { requireAuth } from "@/server/middleware/auth";
 import { zJson } from "@/server/validator";
@@ -13,7 +14,7 @@ export const blogRoute = new Hono()
     const now = new Date().toISOString();
 
     const conditions = [
-      eq(posts.status, "published"),
+      eq(posts.status, POST_STATUS.PUBLISHED),
       isNotNull(posts.publishedAt),
       lte(posts.publishedAt, now),
     ];
@@ -52,7 +53,7 @@ export const blogRoute = new Hono()
       .from(posts)
       .where(
         and(
-          eq(posts.status, "published"),
+          eq(posts.status, POST_STATUS.PUBLISHED),
           isNotNull(posts.publishedAt),
           lte(posts.publishedAt, now),
         ),
@@ -75,7 +76,7 @@ export const blogRoute = new Hono()
       .where(
         and(
           eq(posts.slug, slug),
-          eq(posts.status, "published"),
+          eq(posts.status, POST_STATUS.PUBLISHED),
           isNotNull(posts.publishedAt),
           lte(posts.publishedAt, now),
         ),

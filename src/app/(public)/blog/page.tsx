@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BlogList } from "@/components/blog-list";
 import { getBlogTags, getPosts } from "@/lib/api";
+import { BLOG_PAGE_SIZE } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ export default async function Blog({
 }) {
   const { tag } = await searchParams;
   const [{ items, nextCursor }, tags] = await Promise.all([
-    getPosts({ tag, limit: 10 }),
+    getPosts({ tag, limit: BLOG_PAGE_SIZE }),
     getBlogTags(),
   ]);
 

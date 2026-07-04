@@ -2,12 +2,19 @@
 
 import type { InferRequestType, InferResponseType } from "hono/client";
 import { useEffect, useRef, useState } from "react";
-import { AdminTopbar } from "@/components/admin/topbar";
 import { Modal } from "@/components/admin/modal";
 import { TagInput } from "@/components/admin/tag-input";
+import { AdminTopbar } from "@/components/admin/topbar";
 import { useUnsavedGuard } from "@/components/admin/unsaved-guard";
 import { UploadButton } from "@/components/admin/upload-button";
 import { MarkdownContent } from "@/components/markdown";
+import {
+  BLOG_FOLDER,
+  POST_STATUS,
+  type PostStatus,
+  SLUG_PATTERN,
+  SLUG_REGEX,
+} from "@/lib/constants";
 import { formatDate } from "@/lib/format";
 import { client } from "@/lib/rpc";
 import { uploadToCloudinary } from "@/lib/upload";
@@ -29,7 +36,7 @@ type PostForm = {
   body: string;
   coverImageUrl: string;
   tags: string[];
-  status: "draft" | "published";
+  status: PostStatus;
   publishedAt: string;
 };
 
@@ -40,7 +47,7 @@ const blank: PostForm = {
   body: "",
   coverImageUrl: "",
   tags: [],
-  status: "draft",
+  status: POST_STATUS.DRAFT,
   publishedAt: "",
 };
 
@@ -69,9 +76,9 @@ export default function BlogAdminPage() {
 
   async function persist(data: PostForm, editing: string | null) {
     const slug = data.slug.trim();
-    if (!/^[a-z0-9-]+$/.test(slug) || !data.title || !data.body) return 0;
+    if (!SLUG_REGEX.test(slug) || !data.title || !data.body) return 0;
     const publishedAt =
-      data.status === "published" && !data.publishedAt
+      data.status === POST_STATUS.PUBLISHED && !data.publishedAt
         ? new Date().toISOString()
         : data.publishedAt || null;
     const json: PostJson = {
@@ -149,7 +156,7 @@ export default function BlogAdminPage() {
 
   async function openImages() {
     const slug = form.slug.trim();
-    if (!/^[a-z0-9-]+$/.test(slug)) {
+    if (!SLUG_REGEX.test(slug)) {
       setError(
         "アップロード済み画像を表示するには、先に slug を入力してください。",
       );
@@ -193,7 +200,7 @@ export default function BlogAdminPage() {
   }
 
   async function uploadCover(file: File) {
-    const { url } = await uploadToCloudinary(file, { folder: "mado/blog" });
+    const { url } = await uploadToCloudinary(file, { folder: BLOG_FOLDER });
     setForm((f) => ({ ...f, coverImageUrl: url }));
   }
 
@@ -217,7 +224,7 @@ export default function BlogAdminPage() {
 
   async function insertImage(file: File) {
     const slug = form.slug.trim();
-    if (!/^[a-z0-9-]+$/.test(slug)) {
+    if (!SLUG_REGEX.test(slug)) {
       setError(
         "本文に画像を挿入するには、先に slug（英小文字・数字・ハイフン）を入力してください。",
       );
@@ -227,7 +234,7 @@ export default function BlogAdminPage() {
     setError("");
     try {
       const { url } = await uploadToCloudinary(file, {
-        folder: `mado/blog/${slug}`,
+        folder: `${BLOG_FOLDER}/${slug}`,
       });
       insertAtCursor(`\n![](${url})\n`);
     } catch {
@@ -281,9 +288,7 @@ export default function BlogAdminPage() {
             <tr key={post.id}>
               <td>{post.title}</td>
               <td>
-                <span
-                  className={`badge badge--${post.status === "published" ? "published" : "draft"}`}
-                >
+                <span className={`badge badge--${post.status}`}>
                   {post.status}
                 </span>
               </td>
@@ -331,14 +336,15 @@ export default function BlogAdminPage() {
             <input
               id="slug"
               type="text"
-              pattern="[a-z0-9-]+"
+              pattern={SLUG_PATTERN}
               placeholder="my-post"
               value={form.slug}
               onChange={(e) => setForm({ ...form, slug: e.target.value })}
               required
             />
             <p className="field__hint">
-              本文への画像挿入には slug が必要です（保存先 mado/blog/&#123;slug&#125;）。
+              本文への画像挿入には slug が必要です（保存先 {BLOG_FOLDER}
+              /&#123;slug&#125;）。
             </p>
           </div>
         </div>
@@ -435,12 +441,14 @@ export default function BlogAdminPage() {
               onChange={(e) =>
                 setForm({
                   ...form,
-                  status: e.target.value as "draft" | "published",
+                  status: e.target.value as PostStatus,
                 })
               }
             >
-              <option value="draft">draft</option>
-              <option value="published">published</option>
+              <option value={POST_STATUS.DRAFT}>{POST_STATUS.DRAFT}</option>
+              <option value={POST_STATUS.PUBLISHED}>
+                {POST_STATUS.PUBLISHED}
+              </option>
             </select>
           </div>
           <div className="field">

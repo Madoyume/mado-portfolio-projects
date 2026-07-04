@@ -1,13 +1,18 @@
 import { AdminTopbar } from "@/components/admin/topbar";
 import { getCareers, getPhotos, getPosts, getSkills } from "@/lib/api";
+import {
+  ADMIN_RECENT_COUNT,
+  LIST_LIMIT_MAX,
+  POST_STATUS,
+} from "@/lib/constants";
 import { formatDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboard() {
   const [posts, photos, skills, careers] = await Promise.all([
-    getPosts({ limit: 100 }),
-    getPhotos({ limit: 100 }),
+    getPosts({ limit: LIST_LIMIT_MAX }),
+    getPhotos({ limit: LIST_LIMIT_MAX }),
     getSkills(),
     getCareers(),
   ]);
@@ -45,11 +50,13 @@ export default async function AdminDashboard() {
             </tr>
           </thead>
           <tbody>
-            {posts.items.slice(0, 5).map((post) => (
+            {posts.items.slice(0, ADMIN_RECENT_COUNT).map((post) => (
               <tr key={post.id}>
                 <td>{post.title}</td>
                 <td>
-                  <span className="badge badge--published">published</span>
+                  <span className={`badge badge--${POST_STATUS.PUBLISHED}`}>
+                    {POST_STATUS.PUBLISHED}
+                  </span>
                 </td>
                 <td>{formatDate(post.publishedAt)}</td>
               </tr>

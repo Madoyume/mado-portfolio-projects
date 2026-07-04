@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { deleteImage, listImages, signUpload } from "@/lib/cloudinary";
+import { BLOG_FOLDER, SLUG_REGEX } from "@/lib/constants";
 import { requireAuth } from "@/server/middleware/auth";
 import { zJson } from "@/server/validator";
 
@@ -24,19 +25,19 @@ export const uploadsRoute = new Hono()
   })
   .get("/blog/:slug/images", requireAuth, async (c) => {
     const slug = c.req.param("slug");
-    if (!/^[a-z0-9-]+$/.test(slug)) {
+    if (!SLUG_REGEX.test(slug)) {
       return c.json({ message: "invalid slug" }, 400);
     }
-    const images = await listImages(`mado/blog/${slug}`);
+    const images = await listImages(`${BLOG_FOLDER}/${slug}`);
     return c.json(images);
   })
   .delete("/blog/:slug/image", requireAuth, zJson(deleteInput), async (c) => {
     const slug = c.req.param("slug");
     const { publicId } = c.req.valid("json");
-    if (!/^[a-z0-9-]+$/.test(slug)) {
+    if (!SLUG_REGEX.test(slug)) {
       return c.json({ message: "invalid slug" }, 400);
     }
-    if (!publicId.startsWith(`mado/blog/${slug}/`)) {
+    if (!publicId.startsWith(`${BLOG_FOLDER}/${slug}/`)) {
       return c.json({ message: "not allowed" }, 400);
     }
     await deleteImage(publicId);

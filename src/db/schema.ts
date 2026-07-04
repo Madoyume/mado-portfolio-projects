@@ -1,4 +1,5 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { POST_STATUS, type PostStatus, PROFILE_ID } from "../lib/constants";
 
 type SocialLink = {
   label: string;
@@ -15,7 +16,7 @@ const id = () =>
 const now = () => new Date().toISOString();
 
 export const profile = sqliteTable("profile", {
-  id: text("id").primaryKey().default("default"),
+  id: text("id").primaryKey().default(PROFILE_ID),
   name: text("name").notNull(),
   headline: text("headline").notNull(),
   bio: text("bio"),
@@ -52,9 +53,9 @@ export const posts = sqliteTable("posts", {
   coverImageUrl: text("cover_image_url"),
   tags: text("tags", { mode: "json" }).$type<string[]>(),
   status: text("status")
-    .$type<"draft" | "published">()
+    .$type<PostStatus>()
     .notNull()
-    .default("draft"),
+    .default(POST_STATUS.DRAFT),
   publishedAt: text("published_at"),
   createdAt: text("created_at").notNull().$defaultFn(now),
   updatedAt: text("updated_at").notNull().$defaultFn(now).$onUpdateFn(now),

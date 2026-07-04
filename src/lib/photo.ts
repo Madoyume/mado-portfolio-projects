@@ -1,4 +1,4 @@
-export const PHOTOS_FOLDER = "mado/photos";
+import { PHOTOS_FOLDER } from "./constants";
 
 export function toPhotoId(publicId: string) {
   return publicId.replace(`${PHOTOS_FOLDER}/`, "");

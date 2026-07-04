@@ -1,12 +1,10 @@
 import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { z } from "zod";
+import { SESSION_COOKIE, SESSION_MAX_AGE_SECONDS } from "@/lib/constants";
 import { getAuthEnv } from "@/lib/env";
 import { createSession, verifySession } from "@/lib/session";
 import { zJson } from "@/server/validator";
-
-const COOKIE = "session";
-const MAX_AGE = 60 * 60 * 24 * 7;
 
 const cookieOptions = {
   httpOnly: true,
@@ -30,18 +28,18 @@ export const authRoute = new Hono()
     if (!timingSafeEqual(token, getAuthEnv().ADMIN_TOKEN)) {
       return c.json({ message: "invalid token" }, 401);
     }
-    setCookie(c, COOKIE, await createSession(), {
+    setCookie(c, SESSION_COOKIE, await createSession(), {
       ...cookieOptions,
-      maxAge: MAX_AGE,
+      maxAge: SESSION_MAX_AGE_SECONDS,
     });
     return c.body(null, 204);
   })
   .post("/logout", async (c) => {
-    deleteCookie(c, COOKIE, cookieOptions);
+    deleteCookie(c, SESSION_COOKIE, cookieOptions);
     return c.body(null, 204);
   })
   .get("/me", async (c) => {
-    const token = getCookie(c, COOKIE);
+    const token = getCookie(c, SESSION_COOKIE);
     if (!token || !(await verifySession(token))) {
       return c.json({ authenticated: false }, 401);
     }

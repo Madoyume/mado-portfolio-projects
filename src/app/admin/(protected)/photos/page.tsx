@@ -2,10 +2,10 @@
 
 import type { InferResponseType } from "hono/client";
 import { useEffect, useState } from "react";
-import { AdminTopbar } from "@/components/admin/topbar";
 import { TagInput } from "@/components/admin/tag-input";
+import { AdminTopbar } from "@/components/admin/topbar";
 import { UploadButton } from "@/components/admin/upload-button";
-import { PHOTOS_FOLDER } from "@/lib/photo";
+import { PHOTOS_FOLDER } from "@/lib/constants";
 import { client } from "@/lib/rpc";
 import { uploadToCloudinary } from "@/lib/upload";
 

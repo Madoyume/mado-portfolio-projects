@@ -1,15 +1,26 @@
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { posts } from "@/db/schema";
+import {
+  LIST_LIMIT_DEFAULT,
+  LIST_LIMIT_MAX,
+  POST_STATUS,
+  SLUG_REGEX,
+} from "@/lib/constants";
 
 export const postListQuery = z.object({
   tag: z.string().optional(),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
+  limit: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(LIST_LIMIT_MAX)
+    .default(LIST_LIMIT_DEFAULT),
   cursor: z.string().optional(),
 });
 
 export const postInput = createInsertSchema(posts, {
-  slug: (s) => s.regex(/^[a-z0-9-]+$/),
-  status: z.enum(["draft", "published"]).optional(),
+  slug: (s) => s.regex(SLUG_REGEX),
+  status: z.enum([POST_STATUS.DRAFT, POST_STATUS.PUBLISHED]).optional(),
   tags: z.array(z.string()).nullish(),
 }).omit({ id: true, createdAt: true, updatedAt: true });
