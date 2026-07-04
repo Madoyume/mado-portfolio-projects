@@ -8,6 +8,10 @@ export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 export const LIST_LIMIT_DEFAULT = 20;
 export const LIST_LIMIT_MAX = 100;
 
+export const TIMEZONE = "Asia/Tokyo";
+export const JST_OFFSET = "+09:00";
+export const JST_OFFSET_MINUTES = 9 * 60;
+
 // # cloudinary
 export const CLOUDINARY_ROOT = "mado";
 export const CLOUDINARY_DELIVERY_BASE = "https://res.cloudinary.com";

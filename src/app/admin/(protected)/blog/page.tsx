@@ -15,6 +15,7 @@ import {
   SLUG_PATTERN,
   SLUG_REGEX,
 } from "@/lib/constants";
+import { nowJst } from "@/lib/datetime";
 import { formatDate } from "@/lib/format";
 import { client } from "@/lib/rpc";
 import { uploadToCloudinary } from "@/lib/upload";
@@ -79,7 +80,7 @@ export default function BlogAdminPage() {
     if (!SLUG_REGEX.test(slug) || !data.title || !data.body) return 0;
     const publishedAt =
       data.status === POST_STATUS.PUBLISHED && !data.publishedAt
-        ? new Date().toISOString()
+        ? nowJst()
         : data.publishedAt || null;
     const json: PostJson = {
       slug,

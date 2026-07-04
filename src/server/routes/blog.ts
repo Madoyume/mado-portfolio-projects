@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import { db } from "@/db/client";
 import { posts } from "@/db/schema";
 import { POST_STATUS } from "@/lib/constants";
+import { nowJst } from "@/lib/datetime";
 import { postInput, postListQuery } from "@/schemas/post";
 import { requireAuth } from "@/server/middleware/auth";
 import { zJson } from "@/server/validator";
@@ -11,7 +12,7 @@ import { zJson } from "@/server/validator";
 export const blogRoute = new Hono()
   .get("/", zValidator("query", postListQuery), async (c) => {
     const { tag, limit, cursor } = c.req.valid("query");
-    const now = new Date().toISOString();
+    const now = nowJst();
 
     const conditions = [
       eq(posts.status, POST_STATUS.PUBLISHED),
@@ -47,7 +48,7 @@ export const blogRoute = new Hono()
     return c.json({ items, nextCursor });
   })
   .get("/tags", async (c) => {
-    const now = new Date().toISOString();
+    const now = nowJst();
     const rows = await db
       .select({ tags: posts.tags })
       .from(posts)
@@ -68,7 +69,7 @@ export const blogRoute = new Hono()
   })
   .get("/:slug", async (c) => {
     const slug = c.req.param("slug");
-    const now = new Date().toISOString();
+    const now = nowJst();
 
     const [row] = await db
       .select()

@@ -1,8 +1,9 @@
 import { getProfile } from "@/lib/api";
+import { currentYear } from "@/lib/format";
 
 export async function SiteFooter() {
   const profile = await getProfile();
-  const year = new Date().getFullYear();
+  const year = currentYear();
   const links = profile?.socialLinks ?? [];
 
   return (

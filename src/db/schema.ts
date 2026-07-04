@@ -1,5 +1,6 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { POST_STATUS, type PostStatus, PROFILE_ID } from "../lib/constants";
+import { nowJst } from "../lib/datetime";
 
 type SocialLink = {
   label: string;
@@ -13,8 +14,6 @@ const id = () =>
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID());
 
-const now = () => new Date().toISOString();
-
 export const profile = sqliteTable("profile", {
   id: text("id").primaryKey().default(PROFILE_ID),
   name: text("name").notNull(),
@@ -25,7 +24,7 @@ export const profile = sqliteTable("profile", {
   socialLinks: text("social_links", { mode: "json" }).$type<SocialLink[]>(),
   avatarUrl: text("avatar_url"),
   heroImageUrl: text("hero_image_url"),
-  updatedAt: text("updated_at").notNull().$defaultFn(now).$onUpdateFn(now),
+  updatedAt: text("updated_at").notNull().$defaultFn(nowJst).$onUpdateFn(nowJst),
 });
 
 export const careers = sqliteTable("careers", {
@@ -57,8 +56,8 @@ export const posts = sqliteTable("posts", {
     .notNull()
     .default(POST_STATUS.DRAFT),
   publishedAt: text("published_at"),
-  createdAt: text("created_at").notNull().$defaultFn(now),
-  updatedAt: text("updated_at").notNull().$defaultFn(now).$onUpdateFn(now),
+  createdAt: text("created_at").notNull().$defaultFn(nowJst),
+  updatedAt: text("updated_at").notNull().$defaultFn(nowJst).$onUpdateFn(nowJst),
 });
 
 export const photos = sqliteTable("photos", {
@@ -70,7 +69,7 @@ export const photos = sqliteTable("photos", {
   height: integer("height"),
   takenAt: text("taken_at"),
   tags: text("tags", { mode: "json" }).$type<string[]>(),
-  createdAt: text("created_at").notNull().$defaultFn(now),
+  createdAt: text("created_at").notNull().$defaultFn(nowJst),
 });
 
 export const schema = { profile, careers, skills, posts, photos };
