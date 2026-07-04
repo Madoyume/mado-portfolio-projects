@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { AdminTopbar } from "@/components/admin/topbar";
 import { TagInput } from "@/components/admin/tag-input";
 import { UploadButton } from "@/components/admin/upload-button";
+import { PHOTOS_FOLDER } from "@/lib/photo";
 import { client } from "@/lib/rpc";
 import { uploadToCloudinary } from "@/lib/upload";
 
@@ -44,7 +45,7 @@ export default function PhotosAdminPage() {
     setUploading(true);
     try {
       const { publicId, width, height } = await uploadToCloudinary(file, {
-        folder: "mado/photos",
+        folder: PHOTOS_FOLDER,
       });
       await client.api.photos.$post({
         json: { cloudinaryPublicId: publicId, width, height },

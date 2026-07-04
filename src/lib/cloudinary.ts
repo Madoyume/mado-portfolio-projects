@@ -1,5 +1,6 @@
 import { v2 as cloudinary } from "cloudinary";
 import { getCloudinaryEnv } from "./env";
+import { PHOTOS_FOLDER } from "./photo";
 
 function configure() {
   const env = getCloudinaryEnv();
@@ -81,7 +82,7 @@ export function imageUrl(publicId: string) {
     : null;
 }
 
-const ALLOWED_FOLDERS = ["mado/photos", "mado/social", "mado/blog"];
+const ALLOWED_FOLDERS = [PHOTOS_FOLDER, "mado/social", "mado/blog"];
 const ALLOWED_PUBLIC_IDS = ["mado/hero", "mado/avatar"];
 const BLOG_SLUG_FOLDER = /^mado\/blog\/[a-z0-9-]+$/;
 
