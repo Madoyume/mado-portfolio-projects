@@ -3,11 +3,28 @@ import { and, desc, eq, isNotNull, lt, lte, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { db } from "@/db/client";
 import { posts } from "@/db/schema";
-import { POST_STATUS } from "@/lib/constants";
+import { imageUrl } from "@/lib/cloudinary";
+import { BLOG_FOLDER, POST_STATUS } from "@/lib/constants";
 import { nowJst } from "@/lib/datetime";
+import { stripFolder, withFolder } from "@/lib/public-id";
 import { postInput, postListQuery } from "@/schemas/post";
 import { requireAuth } from "@/server/middleware/auth";
 import { zJson } from "@/server/validator";
+
+function withCover<T extends { coverImageId: string | null }>(row: T) {
+  return {
+    ...row,
+    coverImageUrl: row.coverImageId
+      ? imageUrl(withFolder(row.coverImageId, BLOG_FOLDER))
+      : null,
+  };
+}
+
+function coverToId(data: { coverImageId?: string | null }) {
+  return data.coverImageId
+    ? stripFolder(data.coverImageId, BLOG_FOLDER)
+    : data.coverImageId;
+}
 
 export const blogRoute = new Hono()
   .get("/", zValidator("query", postListQuery), async (c) => {
@@ -32,7 +49,6 @@ export const blogRoute = new Hono()
         slug: posts.slug,
         title: posts.title,
         description: posts.description,
-        coverImageUrl: posts.coverImageUrl,
         tags: posts.tags,
         publishedAt: posts.publishedAt,
       })
@@ -65,7 +81,7 @@ export const blogRoute = new Hono()
   })
   .get("/admin/all", requireAuth, async (c) => {
     const rows = await db.select().from(posts).orderBy(desc(posts.updatedAt));
-    return c.json(rows);
+    return c.json(rows.map(withCover));
   })
   .get("/:slug", async (c) => {
     const slug = c.req.param("slug");
@@ -85,13 +101,16 @@ export const blogRoute = new Hono()
       .limit(1);
 
     if (!row) return c.json({ message: "post not found" }, 404);
-    return c.json(row);
+    return c.json(withCover(row));
   })
   .post("/", requireAuth, zJson(postInput), async (c) => {
     const data = c.req.valid("json");
     try {
-      const [row] = await db.insert(posts).values(data).returning();
-      return c.json(row, 201);
+      const [row] = await db
+        .insert(posts)
+        .values({ ...data, coverImageId: coverToId(data) })
+        .returning();
+      return c.json(withCover(row), 201);
     } catch (err) {
       if (err instanceof Error && /UNIQUE/i.test(err.message)) {
         return c.json({ message: "slug already exists" }, 409);
@@ -100,13 +119,14 @@ export const blogRoute = new Hono()
     }
   })
   .put("/:slug", requireAuth, zJson(postInput), async (c) => {
+    const data = c.req.valid("json");
     const [row] = await db
       .update(posts)
-      .set(c.req.valid("json"))
+      .set({ ...data, coverImageId: coverToId(data) })
       .where(eq(posts.slug, c.req.param("slug")))
       .returning();
     if (!row) return c.json({ message: "post not found" }, 404);
-    return c.json(row);
+    return c.json(withCover(row));
   })
   .delete("/:slug", requireAuth, async (c) => {
     const [row] = await db

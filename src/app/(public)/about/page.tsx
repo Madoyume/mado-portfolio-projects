@@ -29,7 +29,9 @@ export default async function About() {
           <h1>{profile?.name ?? "Mado"}</h1>
           <p className="muted">{profile?.headline}</p>
           {profile?.bio && (
-            <p style={{ marginTop: "var(--space-3)" }}>{profile.bio}</p>
+            <p style={{ marginTop: "var(--space-3)", whiteSpace: "pre-line" }}>
+              {profile.bio}
+            </p>
           )}
         </div>
       </section>

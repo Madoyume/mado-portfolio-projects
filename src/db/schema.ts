@@ -22,9 +22,14 @@ export const profile = sqliteTable("profile", {
   location: text("location"),
   email: text("email"),
   socialLinks: text("social_links", { mode: "json" }).$type<SocialLink[]>(),
-  avatarUrl: text("avatar_url"),
-  heroImageUrl: text("hero_image_url"),
-  updatedAt: text("updated_at").notNull().$defaultFn(nowJst).$onUpdateFn(nowJst),
+  hasAvatar: integer("has_avatar", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  hasHero: integer("has_hero", { mode: "boolean" }).notNull().default(false),
+  updatedAt: text("updated_at")
+    .notNull()
+    .$defaultFn(nowJst)
+    .$onUpdateFn(nowJst),
 });
 
 export const careers = sqliteTable("careers", {
@@ -49,7 +54,7 @@ export const posts = sqliteTable("posts", {
   title: text("title").notNull(),
   description: text("description"),
   body: text("body").notNull(),
-  coverImageUrl: text("cover_image_url"),
+  coverImageId: text("cover_image_id"),
   tags: text("tags", { mode: "json" }).$type<string[]>(),
   status: text("status")
     .$type<PostStatus>()
@@ -57,7 +62,10 @@ export const posts = sqliteTable("posts", {
     .default(POST_STATUS.DRAFT),
   publishedAt: text("published_at"),
   createdAt: text("created_at").notNull().$defaultFn(nowJst),
-  updatedAt: text("updated_at").notNull().$defaultFn(nowJst).$onUpdateFn(nowJst),
+  updatedAt: text("updated_at")
+    .notNull()
+    .$defaultFn(nowJst)
+    .$onUpdateFn(nowJst),
 });
 
 export const photos = sqliteTable("photos", {

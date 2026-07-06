@@ -4,7 +4,8 @@ import { Hono } from "hono";
 import { db } from "@/db/client";
 import { photos } from "@/db/schema";
 import { deleteImage, imageUrl } from "@/lib/cloudinary";
-import { photoPublicId, toPhotoId } from "@/lib/photo";
+import { PHOTOS_FOLDER } from "@/lib/constants";
+import { stripFolder, withFolder } from "@/lib/public-id";
 import {
   photoCreateInput,
   photoListQuery,
@@ -36,7 +37,7 @@ export const photosRoute = new Hono()
 
     const items = rows.slice(0, limit).map((r) => ({
       ...r,
-      url: imageUrl(photoPublicId(r.cloudinaryPublicId)),
+      url: imageUrl(withFolder(r.cloudinaryPublicId, PHOTOS_FOLDER)),
     }));
     const last = rows[limit - 1];
     const nextCursor =
@@ -60,7 +61,7 @@ export const photosRoute = new Hono()
       .orderBy(desc(sortKey), desc(photos.id));
     const items = rows.map((r) => ({
       ...r,
-      url: imageUrl(photoPublicId(r.cloudinaryPublicId)),
+      url: imageUrl(withFolder(r.cloudinaryPublicId, PHOTOS_FOLDER)),
     }));
     return c.json(items);
   })
@@ -70,11 +71,17 @@ export const photosRoute = new Hono()
       .insert(photos)
       .values({
         ...input,
-        cloudinaryPublicId: toPhotoId(input.cloudinaryPublicId),
+        cloudinaryPublicId: stripFolder(
+          input.cloudinaryPublicId,
+          PHOTOS_FOLDER,
+        ),
       })
       .returning();
     return c.json(
-      { ...row, url: imageUrl(photoPublicId(row.cloudinaryPublicId)) },
+      {
+        ...row,
+        url: imageUrl(withFolder(row.cloudinaryPublicId, PHOTOS_FOLDER)),
+      },
       201,
     );
   })
@@ -91,7 +98,7 @@ export const photosRoute = new Hono()
     if (!row) return c.json({ message: "photo not found" }, 404);
     return c.json({
       ...row,
-      url: imageUrl(photoPublicId(row.cloudinaryPublicId)),
+      url: imageUrl(withFolder(row.cloudinaryPublicId, PHOTOS_FOLDER)),
     });
   })
   .delete("/:id", requireAuth, async (c) => {
@@ -101,7 +108,7 @@ export const photosRoute = new Hono()
       .returning();
     if (!row) return c.json({ message: "photo not found" }, 404);
     try {
-      await deleteImage(photoPublicId(row.cloudinaryPublicId));
+      await deleteImage(withFolder(row.cloudinaryPublicId, PHOTOS_FOLDER));
     } catch {}
     return c.body(null, 204);
   });

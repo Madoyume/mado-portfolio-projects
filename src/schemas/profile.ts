@@ -13,4 +13,4 @@ export const profileInput = createInsertSchema(profile, {
       }),
     )
     .nullish(),
-}).omit({ id: true, updatedAt: true });
+}).omit({ id: true, updatedAt: true, hasAvatar: true, hasHero: true });

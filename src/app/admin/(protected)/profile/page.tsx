@@ -82,11 +82,12 @@ export default function ProfileAdminPage() {
     const { url } = await uploadToCloudinary(file, {
       publicId: HERO_PUBLIC_ID,
     });
+    await client.api.profile["hero-image"].$post();
     setForm((f) => ({ ...f, heroImageUrl: url }));
   }
 
   async function removeHero() {
-    const res = await fetch("/api/profile/hero-image", { method: "DELETE" });
+    const res = await client.api.profile["hero-image"].$delete();
     if (res.ok) setForm((f) => ({ ...f, heroImageUrl: "" }));
   }
 
@@ -94,11 +95,12 @@ export default function ProfileAdminPage() {
     const { url } = await uploadToCloudinary(file, {
       publicId: AVATAR_PUBLIC_ID,
     });
+    await client.api.profile.avatar.$post();
     setForm((f) => ({ ...f, avatarUrl: url }));
   }
 
   async function removeAvatar() {
-    const res = await fetch("/api/profile/avatar", { method: "DELETE" });
+    const res = await client.api.profile.avatar.$delete();
     if (res.ok) setForm((f) => ({ ...f, avatarUrl: "" }));
   }
 
@@ -121,8 +123,6 @@ export default function ProfileAdminPage() {
         bio: form.bio || null,
         location: form.location || null,
         email: form.email || null,
-        avatarUrl: form.avatarUrl || null,
-        heroImageUrl: form.heroImageUrl || null,
         socialLinks: form.socialLinks
           .filter((l) => l.label && l.url)
           .map((l) => ({
@@ -192,7 +192,7 @@ export default function ProfileAdminPage() {
           </div>
         </div>
         <div className="field image-field">
-          <label htmlFor="avatarUrl">アバター画像</label>
+          <label>アバター画像</label>
           {form.avatarUrl && (
             <img
               src={form.avatarUrl}
@@ -206,13 +206,6 @@ export default function ProfileAdminPage() {
               }}
             />
           )}
-          <input
-            id="avatarUrl"
-            type="url"
-            value={form.avatarUrl}
-            placeholder="URL直接入力、または下からアップロード"
-            onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })}
-          />
           <div className="image-field__actions">
             <UploadButton label="画像をアップロード" onSelect={uploadAvatar} />
             {form.avatarUrl && (
@@ -228,7 +221,7 @@ export default function ProfileAdminPage() {
         </div>
 
         <div className="field image-field">
-          <label htmlFor="heroImageUrl">ヒーロー画像</label>
+          <label>ヒーロー画像</label>
           {form.heroImageUrl && (
             <img
               src={form.heroImageUrl}
@@ -236,13 +229,6 @@ export default function ProfileAdminPage() {
               className="hero-setting__preview"
             />
           )}
-          <input
-            id="heroImageUrl"
-            type="url"
-            value={form.heroImageUrl}
-            placeholder="URL直接入力、または下からアップロード"
-            onChange={(e) => setForm({ ...form, heroImageUrl: e.target.value })}
-          />
           <div className="image-field__actions">
             <UploadButton label="画像をアップロード" onSelect={uploadHero} />
             {form.heroImageUrl && (

@@ -35,7 +35,8 @@ type PostForm = {
   title: string;
   description: string;
   body: string;
-  coverImageUrl: string;
+  coverImageId: string;
+  coverPreview: string;
   tags: string[];
   status: PostStatus;
   publishedAt: string;
@@ -46,7 +47,8 @@ const blank: PostForm = {
   title: "",
   description: "",
   body: "",
-  coverImageUrl: "",
+  coverImageId: "",
+  coverPreview: "",
   tags: [],
   status: POST_STATUS.DRAFT,
   publishedAt: "",
@@ -87,7 +89,7 @@ export default function BlogAdminPage() {
       title: data.title,
       description: data.description || null,
       body: data.body,
-      coverImageUrl: data.coverImageUrl || null,
+      coverImageId: data.coverImageId || null,
       status: data.status,
       publishedAt,
       tags: data.tags,
@@ -144,7 +146,8 @@ export default function BlogAdminPage() {
       title: post.title,
       description: post.description ?? "",
       body: post.body,
-      coverImageUrl: post.coverImageUrl ?? "",
+      coverImageId: post.coverImageId ?? "",
+      coverPreview: post.coverImageUrl ?? "",
       tags: post.tags ?? [],
       status: post.status,
       publishedAt: post.publishedAt ?? "",
@@ -201,8 +204,10 @@ export default function BlogAdminPage() {
   }
 
   async function uploadCover(file: File) {
-    const { url } = await uploadToCloudinary(file, { folder: BLOG_FOLDER });
-    setForm((f) => ({ ...f, coverImageUrl: url }));
+    const { url, publicId } = await uploadToCloudinary(file, {
+      folder: BLOG_FOLDER,
+    });
+    setForm((f) => ({ ...f, coverImageId: publicId, coverPreview: url }));
   }
 
   function insertAtCursor(text: string) {
@@ -403,30 +408,23 @@ export default function BlogAdminPage() {
           />
         </div>
         <div className="field image-field">
-          <label htmlFor="coverImageUrl">カバー画像</label>
-          {form.coverImageUrl && (
+          <label>カバー画像</label>
+          {form.coverPreview && (
             <img
-              src={form.coverImageUrl}
+              src={form.coverPreview}
               alt=""
               className="hero-setting__preview"
             />
           )}
-          <input
-            id="coverImageUrl"
-            type="url"
-            placeholder="URL直接入力、または下からアップロード"
-            value={form.coverImageUrl}
-            onChange={(e) =>
-              setForm({ ...form, coverImageUrl: e.target.value })
-            }
-          />
           <div className="image-field__actions">
             <UploadButton label="画像をアップロード" onSelect={uploadCover} />
-            {form.coverImageUrl && (
+            {form.coverPreview && (
               <button
                 type="button"
                 className="btn btn--danger btn--sm"
-                onClick={() => setForm({ ...form, coverImageUrl: "" })}
+                onClick={() =>
+                  setForm({ ...form, coverImageId: "", coverPreview: "" })
+                }
               >
                 クリア
               </button>
