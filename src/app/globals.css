@@ -17,6 +17,8 @@
   --fg-sub: #6b6b6b;
   --border: #e5e3de;
   --overlay: rgba(26, 26, 26, 0.92);
+  --bg-muted: #f0efea;
+  --link: #2c66a0;
 
   --serif: var(--font-noto-serif-jp), "Hiragino Mincho ProN", serif;
   --sans: var(--font-noto-sans-jp), "Hiragino Sans", sans-serif;
@@ -42,6 +44,8 @@
   --fg-sub: #9b988f;
   --border: #34322d;
   --overlay: rgba(0, 0, 0, 0.94);
+  --bg-muted: #2a2825;
+  --link: #8ab4d8;
 }
 
 *,
@@ -636,22 +640,73 @@ h4 {
   font-size: 1.02rem;
   line-height: 1.95;
 }
+.prose h1 {
+  font-size: 2rem;
+  margin: var(--space-6) 0 var(--space-4);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
 .prose h2 {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   margin: var(--space-6) 0 var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
 }
 .prose h3 {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  margin: var(--space-5) 0 var(--space-3);
+}
+.prose h4 {
+  font-size: 1.1rem;
   margin: var(--space-5) 0 var(--space-3);
 }
 .prose p {
   margin-bottom: var(--space-4);
 }
+.prose a {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose a:hover {
+  opacity: 0.75;
+}
 .prose ul,
 .prose ol {
-  margin: 0 0 var(--space-4) 1.4em;
+  margin: 0 0 var(--space-4);
+  padding-left: 1.6em;
+}
+.prose ul {
+  list-style: disc;
+}
+.prose ul ul {
+  list-style: circle;
+}
+.prose ol {
+  list-style: decimal;
 }
 .prose li {
+  margin-bottom: var(--space-1);
+}
+.prose li > ul,
+.prose li > ol {
+  margin: var(--space-1) 0 0;
+}
+.prose ul.contains-task-list {
+  list-style: none;
+  padding-left: 0.4em;
+}
+.prose ul.contains-task-list input {
+  margin-right: 0.4em;
+}
+.prose dl {
+  margin-bottom: var(--space-4);
+}
+.prose dt {
+  font-weight: 700;
+}
+.prose dd {
+  margin-left: 1.6em;
   margin-bottom: var(--space-2);
 }
 .prose blockquote {
@@ -659,6 +714,35 @@ h4 {
   padding-left: var(--space-4);
   color: var(--fg-sub);
   margin-bottom: var(--space-4);
+}
+.prose blockquote blockquote {
+  margin: var(--space-2) 0;
+}
+.prose hr {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: var(--space-5) 0;
+}
+.prose table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin-bottom: var(--space-4);
+  line-height: 1.6;
+}
+.prose th,
+.prose td {
+  border: 1px solid var(--border);
+  padding: var(--space-2) var(--space-3);
+}
+.prose th {
+  background: var(--bg-muted);
+  font-weight: 700;
+}
+.prose tbody tr:nth-child(even) {
+  background: var(--bg-muted);
 }
 .prose pre {
   background: #1f1f1d;
@@ -673,16 +757,125 @@ h4 {
 .prose code {
   font-family: ui-monospace, "SFMono-Regular", monospace;
   font-size: 0.88em;
-  background: #f0efea;
+  background: var(--bg-muted);
   padding: 1px 5px;
   border-radius: 3px;
-}
-:root[data-theme="dark"] .prose code {
-  background: #2a2825;
 }
 .prose pre code {
   background: none;
   padding: 0;
+}
+.prose .code-block {
+  margin-bottom: var(--space-4);
+}
+.prose .code-block pre {
+  margin-bottom: 0;
+  border-radius: 0 4px 4px 4px;
+}
+.prose .code-block__filename {
+  display: inline-block;
+  background: #3a3a37;
+  color: #e8e8e3;
+  font-family: ui-monospace, "SFMono-Regular", monospace;
+  font-size: 0.75rem;
+  padding: 3px 12px;
+  border-radius: 4px 4px 0 0;
+}
+.prose .footnotes {
+  margin-top: var(--space-6);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+  font-size: 0.88rem;
+  color: var(--fg-sub);
+}
+.prose .footnotes p {
+  margin-bottom: var(--space-1);
+}
+.prose .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* highlight.js (github-dark 相当 / pre は両テーマ共通の暗背景) */
+.prose .hljs-doctag,
+.prose .hljs-keyword,
+.prose .hljs-meta .hljs-keyword,
+.prose .hljs-template-tag,
+.prose .hljs-template-variable,
+.prose .hljs-type,
+.prose .hljs-variable.language_ {
+  color: #ff7b72;
+}
+.prose .hljs-title,
+.prose .hljs-title.class_,
+.prose .hljs-title.class_.inherited__,
+.prose .hljs-title.function_ {
+  color: #d2a8ff;
+}
+.prose .hljs-attr,
+.prose .hljs-attribute,
+.prose .hljs-literal,
+.prose .hljs-meta,
+.prose .hljs-number,
+.prose .hljs-operator,
+.prose .hljs-selector-attr,
+.prose .hljs-selector-class,
+.prose .hljs-selector-id,
+.prose .hljs-variable {
+  color: #79c0ff;
+}
+.prose .hljs-meta .hljs-string,
+.prose .hljs-regexp,
+.prose .hljs-string {
+  color: #a5d6ff;
+}
+.prose .hljs-built_in,
+.prose .hljs-symbol {
+  color: #ffa657;
+}
+.prose .hljs-code,
+.prose .hljs-comment,
+.prose .hljs-formula {
+  color: #8b949e;
+}
+.prose .hljs-name,
+.prose .hljs-quote,
+.prose .hljs-selector-pseudo,
+.prose .hljs-selector-tag {
+  color: #7ee787;
+}
+.prose .hljs-subst {
+  color: #c9d1d9;
+}
+.prose .hljs-section {
+  color: #58a6ff;
+  font-weight: 700;
+}
+.prose .hljs-bullet {
+  color: #f2cc60;
+}
+.prose .hljs-emphasis {
+  color: #c9d1d9;
+  font-style: italic;
+}
+.prose .hljs-strong {
+  color: #c9d1d9;
+  font-weight: 700;
+}
+.prose .hljs-addition {
+  color: #aff5b4;
+  background-color: #033a16;
+}
+.prose .hljs-deletion {
+  color: #ffdcd7;
+  background-color: #67060c;
 }
 .post-header {
   text-align: center;

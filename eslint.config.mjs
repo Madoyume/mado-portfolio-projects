@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
       // クライアントの認証付きマウント時データ取得（async load() を effect で呼ぶ）を許容する。
       // load() は await 後に setState するため同期的な cascading render ではない。
       "react-hooks/set-state-in-effect": "off",
+      // rest 構文でプロパティを除外する分割代入（const { node, ...rest } = props）を許容する。
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { ignoreRestSiblings: true },
+      ],
     },
   },
   // Override default ignores of eslint-config-next.
