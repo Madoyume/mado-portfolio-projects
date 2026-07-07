@@ -29,6 +29,13 @@
       "when": 1783200000000,
       "tag": "0003_bare_image_ids",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1783387877000,
+      "tag": "0004_social_icon_ids",
+      "breakpoints": true
     }
   ]
 }

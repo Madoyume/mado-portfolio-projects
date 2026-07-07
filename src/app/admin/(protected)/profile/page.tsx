@@ -14,8 +14,10 @@ import { uploadToCloudinary } from "@/lib/upload";
 type SocialLink = {
   label: string;
   url: string;
-  iconUrl?: string;
-  iconUrlDark?: string;
+  iconId?: string;
+  iconIdDark?: string;
+  iconPreview?: string;
+  iconPreviewDark?: string;
 };
 
 type ProfileForm = {
@@ -59,8 +61,10 @@ export default function ProfileAdminPage() {
       socialLinks: (p.socialLinks ?? []).map((l) => ({
         label: l.label,
         url: l.url,
-        iconUrl: l.iconUrl ?? undefined,
-        iconUrlDark: l.iconUrlDark ?? undefined,
+        iconId: l.iconId ?? undefined,
+        iconIdDark: l.iconIdDark ?? undefined,
+        iconPreview: l.iconUrl ?? undefined,
+        iconPreviewDark: l.iconUrlDark ?? undefined,
       })),
     });
   }
@@ -107,10 +111,13 @@ export default function ProfileAdminPage() {
   async function uploadIcon(
     index: number,
     file: File,
-    key: "iconUrl" | "iconUrlDark",
+    key: "iconId" | "iconIdDark",
   ) {
-    const { url } = await uploadToCloudinary(file, { folder: SOCIAL_FOLDER });
-    setLink(index, { [key]: url });
+    const { url, publicId } = await uploadToCloudinary(file, {
+      folder: SOCIAL_FOLDER,
+    });
+    const previewKey = key === "iconId" ? "iconPreview" : "iconPreviewDark";
+    setLink(index, { [key]: publicId, [previewKey]: url });
   }
 
   async function submit(e: React.FormEvent) {
@@ -128,8 +135,8 @@ export default function ProfileAdminPage() {
           .map((l) => ({
             label: l.label,
             url: l.url,
-            iconUrl: l.iconUrl || undefined,
-            iconUrlDark: l.iconUrlDark || undefined,
+            iconId: l.iconId || undefined,
+            iconIdDark: l.iconIdDark || undefined,
           })),
       },
     });
@@ -254,17 +261,19 @@ export default function ProfileAdminPage() {
         {form.socialLinks.map((link, i) => (
           <div className="sns-row" key={i}>
             <div className="sns-icon">
-              {link.iconUrl && <img src={link.iconUrl} alt="" />}
+              {link.iconPreview && <img src={link.iconPreview} alt="" />}
               <UploadButton
                 label="通常"
-                onSelect={(file) => uploadIcon(i, file, "iconUrl")}
+                onSelect={(file) => uploadIcon(i, file, "iconId")}
               />
             </div>
             <div className="sns-icon sns-icon--dark">
-              {link.iconUrlDark && <img src={link.iconUrlDark} alt="" />}
+              {link.iconPreviewDark && (
+                <img src={link.iconPreviewDark} alt="" />
+              )}
               <UploadButton
                 label="ダーク"
-                onSelect={(file) => uploadIcon(i, file, "iconUrlDark")}
+                onSelect={(file) => uploadIcon(i, file, "iconIdDark")}
               />
             </div>
             <div className="field">

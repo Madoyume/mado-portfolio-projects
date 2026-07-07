@@ -5,8 +5,8 @@ import { nowJst } from "../lib/datetime";
 type SocialLink = {
   label: string;
   url: string;
-  iconUrl?: string;
-  iconUrlDark?: string;
+  iconId?: string;
+  iconIdDark?: string;
 };
 
 const id = () =>
