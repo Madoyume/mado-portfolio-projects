@@ -909,6 +909,63 @@ h4 {
   margin-bottom: var(--space-6);
 }
 
+.share {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-block: var(--space-6) var(--space-7);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+.share__btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: none;
+  color: var(--fg-sub);
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+.share__btn:hover {
+  color: var(--fg);
+  border-color: var(--fg-sub);
+}
+.share__btn svg {
+  width: 14px;
+  height: 14px;
+}
+.share__tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translate(-50%, 4px);
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: var(--fg);
+  color: var(--bg);
+  font-size: 0.72rem;
+  line-height: 1.6;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+.share__tooltip.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 /* About: 経歴・スキル */
 .profile-head {
   display: grid;

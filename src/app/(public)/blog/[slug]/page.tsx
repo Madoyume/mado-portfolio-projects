@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { MarkdownContent } from "@/components/markdown";
+import { ShareButtons } from "@/components/share-buttons";
 import { getPost } from "@/lib/api";
 import { formatDate } from "@/lib/format";
+import { siteUrl } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +65,13 @@ export default async function BlogDetail({
 
         <div className="container prose">
           <MarkdownContent>{post.body}</MarkdownContent>
+        </div>
+
+        <div className="container">
+          <ShareButtons
+            url={`${siteUrl()}/blog/${post.slug}`}
+            title={post.title}
+          />
         </div>
       </article>
     </main>

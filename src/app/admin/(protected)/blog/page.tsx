@@ -62,6 +62,7 @@ export default function BlogAdminPage() {
   const [error, setError] = useState("");
   const [inserting, setInserting] = useState(false);
   const [imagesOpen, setImagesOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [images, setImages] = useState<BlogImage[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
   const [imagesError, setImagesError] = useState("");
@@ -250,9 +251,14 @@ export default function BlogAdminPage() {
     }
   }
 
-  async function submit(e: React.FormEvent) {
+  function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setConfirmOpen(true);
+  }
+
+  async function save() {
+    setConfirmOpen(false);
     const status = await persist(form, editingSlug);
     if (status >= 200 && status < 300) {
       reset();
@@ -478,6 +484,34 @@ export default function BlogAdminPage() {
           )}
         </div>
       </form>
+
+      {confirmOpen && (
+        <Modal onClose={() => setConfirmOpen(false)}>
+          <p style={{ marginBottom: 24 }}>
+            {form.status === POST_STATUS.PUBLISHED
+              ? "記事を公開します。よろしいですか？"
+              : "記事を下書きに保存しますか？"}
+          </p>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: 12,
+            }}
+          >
+            <button type="button" className="btn" onClick={save}>
+              はい
+            </button>
+            <button
+              type="button"
+              className="btn btn--ghost"
+              onClick={() => setConfirmOpen(false)}
+            >
+              いいえ
+            </button>
+          </div>
+        </Modal>
+      )}
 
       {imagesOpen && (
         <Modal wide onClose={() => setImagesOpen(false)}>

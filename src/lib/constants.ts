@@ -39,6 +39,10 @@ export const POST_STATUS = {
 
 export type PostStatus = (typeof POST_STATUS)[keyof typeof POST_STATUS];
 
+export const SHARE_X_URL = "https://x.com/intent/post";
+export const SHARE_FACEBOOK_URL = "https://www.facebook.com/sharer/sharer.php";
+export const SHARE_COPY_FEEDBACK_MS = 2000;
+
 // # home
 export const HOME_FEATURED_LIMIT = 3;
 
