@@ -67,7 +67,18 @@ export default function BlogAdminPage() {
   const [imagesLoading, setImagesLoading] = useState(false);
   const [imagesError, setImagesError] = useState("");
   const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
   const { setGuard } = useUnsavedGuard();
+
+  function syncPreviewScroll(e: React.UIEvent<HTMLTextAreaElement>) {
+    const ta = e.currentTarget;
+    const preview = previewRef.current;
+    if (!preview) return;
+    const max = ta.scrollHeight - ta.clientHeight;
+    if (max <= 0) return;
+    const ratio = ta.scrollTop / max;
+    preview.scrollTop = ratio * (preview.scrollHeight - preview.clientHeight);
+  }
 
   async function load() {
     const res = await client.api.blog.admin.all.$get();
@@ -405,9 +416,10 @@ export default function BlogAdminPage() {
               ref={bodyRef}
               value={form.body}
               onChange={(e) => setForm({ ...form, body: e.target.value })}
+              onScroll={syncPreviewScroll}
               required
             />
-            <div className="editor-preview prose">
+            <div className="editor-preview prose" ref={previewRef}>
               {form.body ? (
                 <MarkdownContent>{form.body}</MarkdownContent>
               ) : (
