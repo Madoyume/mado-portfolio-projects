@@ -1434,6 +1434,10 @@ main {
   }
 }
 
+body:has(.page-loader) .site-footer {
+  display: none;
+}
+
 .page-loader {
   position: fixed;
   inset: 0;
