@@ -20,6 +20,12 @@
   --bg-muted: #f0efea;
   --link: #2c66a0;
 
+  --loader-stroke: #2f3a52;
+  --loader-pane-1: #c8d9ec;
+  --loader-pane-2: #d9e6f4;
+  --loader-pane-3: #b6c8de;
+  --loader-pane-4: #eef2f7;
+
   --serif: var(--font-noto-serif-jp), "Hiragino Mincho ProN", serif;
   --sans: var(--font-noto-sans-jp), "Hiragino Sans", sans-serif;
 
@@ -46,6 +52,12 @@
   --overlay: rgba(0, 0, 0, 0.94);
   --bg-muted: #2a2825;
   --link: #8ab4d8;
+
+  --loader-stroke: #cfd9e6;
+  --loader-pane-1: #a9c4de;
+  --loader-pane-2: #bfd4e8;
+  --loader-pane-3: #93aecb;
+  --loader-pane-4: #dbe4ee;
 }
 
 *,
@@ -1401,5 +1413,89 @@ h4 {
   .admin__side {
     position: static;
     height: auto;
+  }
+}
+
+/* =====================================================================
+   ページ遷移演出
+   ===================================================================== */
+main {
+  animation: page-enter 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  backdrop-filter: blur(3px);
+  opacity: 0;
+  animation: loader-appear 0.25s ease 0.15s forwards;
+}
+
+.page-loader__logo {
+  width: clamp(120px, 18vw, 160px);
+  height: auto;
+  animation: loader-pulse 1.8s ease-in-out infinite;
+}
+
+.page-loader__outline {
+  fill: none;
+  stroke: var(--loader-stroke);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.page-loader__pane--1 {
+  fill: var(--loader-pane-1);
+}
+.page-loader__pane--2 {
+  fill: var(--loader-pane-2);
+}
+.page-loader__pane--3 {
+  fill: var(--loader-pane-3);
+}
+.page-loader__pane--4 {
+  fill: var(--loader-pane-4);
+}
+
+@keyframes loader-appear {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes loader-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main,
+  .page-loader,
+  .page-loader__logo {
+    animation: none;
+  }
+  .page-loader {
+    opacity: 1;
   }
 }

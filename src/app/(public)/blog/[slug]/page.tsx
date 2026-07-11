@@ -35,34 +35,36 @@ export default async function BlogDetail({
   if (!post) notFound();
 
   return (
-    <article>
-      <header className="post-header container">
-        {post.tags && post.tags.length > 0 && (
-          <div className="tags">
-            {post.tags.map((tag) => (
-              <span className="tag" key={tag}>
-                {tag}
-              </span>
-            ))}
+    <main>
+      <article>
+        <header className="post-header container">
+          {post.tags && post.tags.length > 0 && (
+            <div className="tags">
+              {post.tags.map((tag) => (
+                <span className="tag" key={tag}>
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+          <h1>{post.title}</h1>
+          <p className="muted" style={{ marginTop: "var(--space-3)" }}>
+            <time dateTime={post.publishedAt ?? undefined}>
+              {formatDate(post.publishedAt)}
+            </time>
+          </p>
+        </header>
+
+        {post.coverImageUrl && (
+          <div className="container">
+            <img className="post-cover" src={post.coverImageUrl} alt="" />
           </div>
         )}
-        <h1>{post.title}</h1>
-        <p className="muted" style={{ marginTop: "var(--space-3)" }}>
-          <time dateTime={post.publishedAt ?? undefined}>
-            {formatDate(post.publishedAt)}
-          </time>
-        </p>
-      </header>
 
-      {post.coverImageUrl && (
-        <div className="container">
-          <img className="post-cover" src={post.coverImageUrl} alt="" />
+        <div className="container prose">
+          <MarkdownContent>{post.body}</MarkdownContent>
         </div>
-      )}
-
-      <div className="container prose">
-        <MarkdownContent>{post.body}</MarkdownContent>
-      </div>
-    </article>
+      </article>
+    </main>
   );
 }
