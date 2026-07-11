@@ -273,6 +273,18 @@ export default function BlogAdminPage() {
     }
   }
 
+  const locked =
+    editingSlug !== null &&
+    baseline.status === POST_STATUS.PUBLISHED &&
+    form.status === POST_STATUS.PUBLISHED;
+
+  const confirmMessage =
+    form.status === POST_STATUS.PUBLISHED
+      ? "記事を公開します。よろしいですか？"
+      : baseline.status === POST_STATUS.PUBLISHED
+        ? "記事を未公開状態にします。よろしいですか？"
+        : "記事を下書きに保存しますか？";
+
   async function remove(slug: string) {
     if (!window.confirm("この記事を削除しますか？")) return;
     const res = await client.api.blog[":slug"].$delete({ param: { slug } });
@@ -474,7 +486,16 @@ export default function BlogAdminPage() {
         </div>
         {error && <p className="form-error">{error}</p>}
         <div style={{ display: "flex", gap: "var(--space-3)" }}>
-          <button type="submit" className="btn">
+          <button
+            type="submit"
+            className="btn"
+            disabled={locked}
+            title={
+              locked
+                ? "公開中の記事を変更するには、状態を draft にしてください。"
+                : undefined
+            }
+          >
             {editingSlug ? "更新" : "作成"}
           </button>
           {editingSlug && (
@@ -487,11 +508,7 @@ export default function BlogAdminPage() {
 
       {confirmOpen && (
         <Modal onClose={() => setConfirmOpen(false)}>
-          <p style={{ marginBottom: 24 }}>
-            {form.status === POST_STATUS.PUBLISHED
-              ? "記事を公開します。よろしいですか？"
-              : "記事を下書きに保存しますか？"}
-          </p>
+          <p style={{ marginBottom: 24 }}>{confirmMessage}</p>
           <div
             style={{
               display: "flex",
