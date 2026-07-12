@@ -11,14 +11,16 @@ export const metadata = { title: "Blog" };
 export default async function Blog({
   searchParams,
 }: {
-  searchParams: Promise<{ tag?: string; month?: string }>;
+  searchParams: Promise<{ tag?: string; month?: string; page?: string }>;
 }) {
-  const { tag, month } = await searchParams;
-  const [{ items, nextCursor }, tags, archive] = await Promise.all([
-    getPosts({ tag, month, limit: BLOG_PAGE_SIZE }),
+  const { tag, month, page: rawPage } = await searchParams;
+  const page = Math.max(1, Number(rawPage) || 1);
+  const [{ items, total }, tags, archive] = await Promise.all([
+    getPosts({ tag, month, page, limit: BLOG_PAGE_SIZE }),
     getBlogTags(),
     getBlogArchive(),
   ]);
+  const pageCount = Math.ceil(total / BLOG_PAGE_SIZE);
 
   return (
     <main className="container blog-layout">
@@ -50,9 +52,9 @@ export default async function Blog({
         )}
 
         <BlogList
-          key={`${tag ?? "all"}-${month ?? "all"}`}
-          initialItems={items}
-          initialCursor={nextCursor}
+          items={items}
+          page={page}
+          pageCount={pageCount}
           tag={tag}
           month={month}
         />

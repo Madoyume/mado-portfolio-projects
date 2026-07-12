@@ -18,7 +18,7 @@ export const postListQuery = z.object({
     .min(1)
     .max(LIST_LIMIT_MAX)
     .default(LIST_LIMIT_DEFAULT),
-  cursor: z.string().optional(),
+  page: z.coerce.number().int().min(1).default(1),
 });
 
 export const postInput = createInsertSchema(posts, {

@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
-import { and, desc, eq, isNotNull, lt, lte, sql } from "drizzle-orm";
+import { and, desc, eq, isNotNull, lte, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { db } from "@/db/client";
 import { posts } from "@/db/schema";
@@ -28,7 +28,7 @@ function coverToId(data: { coverImageId?: string | null }) {
 
 export const blogRoute = new Hono()
   .get("/", zValidator("query", postListQuery), async (c) => {
-    const { tag, month, limit, cursor } = c.req.valid("query");
+    const { tag, month, limit, page } = c.req.valid("query");
     const now = nowJst();
 
     const conditions = [
@@ -36,7 +36,6 @@ export const blogRoute = new Hono()
       isNotNull(posts.publishedAt),
       lte(posts.publishedAt, now),
     ];
-    if (cursor) conditions.push(lt(posts.publishedAt, cursor));
     if (month) {
       conditions.push(sql`substr(${posts.publishedAt}, 1, 7) = ${month}`);
     }
@@ -45,26 +44,27 @@ export const blogRoute = new Hono()
         sql`EXISTS (SELECT 1 FROM json_each(${posts.tags}) WHERE value = ${tag})`,
       );
     }
+    const where = and(...conditions);
 
-    const rows = await db
-      .select({
-        id: posts.id,
-        slug: posts.slug,
-        title: posts.title,
-        description: posts.description,
-        tags: posts.tags,
-        publishedAt: posts.publishedAt,
-      })
-      .from(posts)
-      .where(and(...conditions))
-      .orderBy(desc(posts.publishedAt))
-      .limit(limit + 1);
+    const [items, [{ total }]] = await Promise.all([
+      db
+        .select({
+          id: posts.id,
+          slug: posts.slug,
+          title: posts.title,
+          description: posts.description,
+          tags: posts.tags,
+          publishedAt: posts.publishedAt,
+        })
+        .from(posts)
+        .where(where)
+        .orderBy(desc(posts.publishedAt))
+        .limit(limit)
+        .offset((page - 1) * limit),
+      db.select({ total: sql<number>`count(*)` }).from(posts).where(where),
+    ]);
 
-    const items = rows.slice(0, limit);
-    const nextCursor =
-      rows.length > limit ? (items.at(-1)?.publishedAt ?? null) : null;
-
-    return c.json({ items, nextCursor });
+    return c.json({ items, total });
   })
   .get("/tags", async (c) => {
     const now = nowJst();

@@ -38,7 +38,7 @@ type PostQuery = {
   tag?: string;
   month?: string;
   limit?: number;
-  cursor?: string;
+  page?: number;
 };
 
 export const getPosts = cache(async (query: PostQuery = {}) => {
@@ -47,10 +47,10 @@ export const getPosts = cache(async (query: PostQuery = {}) => {
       ...(query.tag ? { tag: query.tag } : {}),
       ...(query.month ? { month: query.month } : {}),
       ...(query.limit ? { limit: String(query.limit) } : {}),
-      ...(query.cursor ? { cursor: query.cursor } : {}),
+      ...(query.page ? { page: String(query.page) } : {}),
     },
   });
-  return res.ok ? await res.json() : { items: [], nextCursor: null };
+  return res.ok ? await res.json() : { items: [], total: 0 };
 });
 
 export const getBlogTags = cache(async () => {

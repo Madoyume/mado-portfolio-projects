@@ -56,17 +56,19 @@ export default async function Home() {
         </div>
         <div className="blog-list">
           {latest.map((post) => (
-            <article className="post-row" key={post.id}>
+            <Link
+              href={`/blog/${post.slug}`}
+              className="post-row"
+              key={post.id}
+            >
               <time dateTime={post.publishedAt ?? undefined}>
                 {formatDate(post.publishedAt)}
               </time>
               <div>
-                <h3>
-                  <Link href={`/blog/${post.slug}`}>{post.title}</Link>
-                </h3>
+                <h3>{post.title}</h3>
                 {post.description && <p>{post.description}</p>}
               </div>
-            </article>
+            </Link>
           ))}
         </div>
         <Link href="/blog" className="section__more">
