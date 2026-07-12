@@ -34,12 +34,18 @@ export const getPhotoTags = cache(async () => {
   return res.ok ? await res.json() : [];
 });
 
-type PostQuery = { tag?: string; limit?: number; cursor?: string };
+type PostQuery = {
+  tag?: string;
+  month?: string;
+  limit?: number;
+  cursor?: string;
+};
 
 export const getPosts = cache(async (query: PostQuery = {}) => {
   const res = await client.api.blog.$get({
     query: {
       ...(query.tag ? { tag: query.tag } : {}),
+      ...(query.month ? { month: query.month } : {}),
       ...(query.limit ? { limit: String(query.limit) } : {}),
       ...(query.cursor ? { cursor: query.cursor } : {}),
     },
@@ -49,6 +55,11 @@ export const getPosts = cache(async (query: PostQuery = {}) => {
 
 export const getBlogTags = cache(async () => {
   const res = await client.api.blog.tags.$get();
+  return res.ok ? await res.json() : [];
+});
+
+export const getBlogArchive = cache(async () => {
+  const res = await client.api.blog.archive.$get();
   return res.ok ? await res.json() : [];
 });
 

@@ -16,10 +16,12 @@ export function BlogList({
   initialItems,
   initialCursor,
   tag,
+  month,
 }: {
   initialItems: Post[];
   initialCursor: string | null;
   tag?: string;
+  month?: string;
 }) {
   const [items, setItems] = useState(initialItems);
   const [cursor, setCursor] = useState(initialCursor);
@@ -34,6 +36,7 @@ export function BlogList({
           limit: String(BLOG_PAGE_SIZE),
           cursor,
           ...(tag ? { tag } : {}),
+          ...(month ? { month } : {}),
         },
       });
       if (res.ok) {

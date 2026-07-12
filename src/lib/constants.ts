@@ -31,6 +31,7 @@ export const PHOTOS_PAGE_SIZE = 20;
 export const BLOG_FOLDER = `${CLOUDINARY_ROOT}/blog`;
 export const BLOG_PAGE_SIZE = 10;
 export const BLOG_IMAGE_LIST_MAX = 100;
+export const ARCHIVE_MONTH_REGEX = /^\d{4}-\d{2}$/;
 
 export const POST_STATUS = {
   DRAFT: "draft",

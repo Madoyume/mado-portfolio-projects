@@ -28,7 +28,7 @@ function coverToId(data: { coverImageId?: string | null }) {
 
 export const blogRoute = new Hono()
   .get("/", zValidator("query", postListQuery), async (c) => {
-    const { tag, limit, cursor } = c.req.valid("query");
+    const { tag, month, limit, cursor } = c.req.valid("query");
     const now = nowJst();
 
     const conditions = [
@@ -37,6 +37,9 @@ export const blogRoute = new Hono()
       lte(posts.publishedAt, now),
     ];
     if (cursor) conditions.push(lt(posts.publishedAt, cursor));
+    if (month) {
+      conditions.push(sql`substr(${posts.publishedAt}, 1, 7) = ${month}`);
+    }
     if (tag) {
       conditions.push(
         sql`EXISTS (SELECT 1 FROM json_each(${posts.tags}) WHERE value = ${tag})`,
@@ -78,6 +81,24 @@ export const blogRoute = new Hono()
     const tags = new Set<string>();
     for (const row of rows) for (const t of row.tags ?? []) tags.add(t);
     return c.json([...tags].sort());
+  })
+  .get("/archive", async (c) => {
+    const now = nowJst();
+    // published_at は JST オフセット付きで保存されるため先頭7文字がそのまま JST の年月
+    const month = sql<string>`substr(${posts.publishedAt}, 1, 7)`;
+    const rows = await db
+      .select({ month: month.as("month"), count: sql<number>`count(*)` })
+      .from(posts)
+      .where(
+        and(
+          eq(posts.status, POST_STATUS.PUBLISHED),
+          isNotNull(posts.publishedAt),
+          lte(posts.publishedAt, now),
+        ),
+      )
+      .groupBy(month)
+      .orderBy(desc(month));
+    return c.json(rows);
   })
   .get("/admin/all", requireAuth, async (c) => {
     const rows = await db.select().from(posts).orderBy(desc(posts.updatedAt));

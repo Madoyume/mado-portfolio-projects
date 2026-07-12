@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ThemeToggle } from "./theme-toggle";
+import { SiteNav } from "./site-nav";
 
 export function SiteHeader() {
   return (
@@ -17,12 +17,7 @@ export function SiteHeader() {
             className="brand__logo brand__logo--dark"
           />
         </Link>
-        <nav className="nav">
-          <Link href="/photos">Photos</Link>
-          <Link href="/blog">Blog</Link>
-          <Link href="/about">About</Link>
-          <ThemeToggle />
-        </nav>
+        <SiteNav />
       </div>
     </header>
   );

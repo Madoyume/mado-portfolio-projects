@@ -2,6 +2,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { posts } from "@/db/schema";
 import {
+  ARCHIVE_MONTH_REGEX,
   LIST_LIMIT_DEFAULT,
   LIST_LIMIT_MAX,
   POST_STATUS,
@@ -10,6 +11,7 @@ import {
 
 export const postListQuery = z.object({
   tag: z.string().optional(),
+  month: z.string().regex(ARCHIVE_MONTH_REGEX).optional(),
   limit: z.coerce
     .number()
     .int()
