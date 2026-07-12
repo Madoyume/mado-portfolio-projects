@@ -642,6 +642,34 @@ h4 {
   gap: var(--space-2);
   margin-top: var(--space-6);
 }
+.admin-list-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  min-height: 36px;
+  margin-bottom: var(--space-3);
+}
+.admin-list-toolbar__filters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.admin-list-toolbar__filters select,
+.admin-list-toolbar__filters input {
+  padding: 6px 10px;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  color: var(--fg);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+}
+.admin-list-toolbar .pagination {
+  margin-top: 0;
+  margin-left: auto;
+}
 .pagination__btn {
   display: inline-flex;
   align-items: center;
@@ -651,8 +679,11 @@ h4 {
   padding: 0 6px;
   border: 1px solid var(--border);
   border-radius: 50%;
+  background: none;
+  font-family: var(--sans);
   font-size: 0.88rem;
   color: var(--fg-sub);
+  cursor: pointer;
   transition:
     color 0.2s ease,
     border-color 0.2s ease;

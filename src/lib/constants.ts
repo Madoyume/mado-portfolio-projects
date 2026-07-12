@@ -49,3 +49,5 @@ export const HOME_FEATURED_LIMIT = 3;
 
 // # admin
 export const ADMIN_RECENT_COUNT = 5;
+export const ADMIN_BLOG_PAGE_SIZE = 5;
+export const ADMIN_PHOTOS_PAGE_SIZE = 20;

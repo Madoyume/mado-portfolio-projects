@@ -3,12 +3,14 @@
 import type { InferRequestType, InferResponseType } from "hono/client";
 import { useEffect, useRef, useState } from "react";
 import { Modal } from "@/components/admin/modal";
+import { Pager } from "@/components/admin/pager";
 import { TagInput } from "@/components/admin/tag-input";
 import { AdminTopbar } from "@/components/admin/topbar";
 import { useUnsavedGuard } from "@/components/admin/unsaved-guard";
 import { UploadButton } from "@/components/admin/upload-button";
 import { MarkdownContent } from "@/components/markdown";
 import {
+  ADMIN_BLOG_PAGE_SIZE,
   BLOG_FOLDER,
   POST_STATUS,
   type PostStatus,
@@ -63,6 +65,10 @@ export default function BlogAdminPage() {
   const [inserting, setInserting] = useState(false);
   const [imagesOpen, setImagesOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [listPage, setListPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<"" | PostStatus>("");
+  const [yearFilter, setYearFilter] = useState("");
+  const [monthFilter, setMonthFilter] = useState("");
   const [images, setImages] = useState<BlogImage[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
   const [imagesError, setImagesError] = useState("");
@@ -296,6 +302,37 @@ export default function BlogAdminPage() {
         ? "記事を未公開状態にします。よろしいですか？"
         : "記事を下書きに保存しますか？";
 
+  const publishedYears = [
+    ...new Set(
+      items
+        .map((post) => post.publishedAt?.slice(0, 4))
+        .filter((y): y is string => Boolean(y)),
+    ),
+  ]
+    .sort()
+    .reverse();
+
+  const periodFilter = yearFilter
+    ? monthFilter
+      ? `${yearFilter}-${monthFilter}`
+      : yearFilter
+    : "";
+
+  const filteredItems = items.filter(
+    (post) =>
+      (!statusFilter || post.status === statusFilter) &&
+      (!periodFilter || (post.publishedAt ?? "").startsWith(periodFilter)),
+  );
+  const listPageCount = Math.max(
+    1,
+    Math.ceil(filteredItems.length / ADMIN_BLOG_PAGE_SIZE),
+  );
+  const currentListPage = Math.min(listPage, listPageCount);
+  const pagedItems = filteredItems.slice(
+    (currentListPage - 1) * ADMIN_BLOG_PAGE_SIZE,
+    currentListPage * ADMIN_BLOG_PAGE_SIZE,
+  );
+
   async function remove(slug: string) {
     if (!window.confirm("この記事を削除しますか？")) return;
     const res = await client.api.blog[":slug"].$delete({ param: { slug } });
@@ -309,6 +346,65 @@ export default function BlogAdminPage() {
     <main className="admin__main">
       <AdminTopbar title="ブログ" />
 
+      <div className="admin-list-toolbar">
+        <div className="admin-list-toolbar__filters">
+          <select
+            aria-label="公開状態で絞り込み"
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value as "" | PostStatus);
+              setListPage(1);
+            }}
+          >
+            <option value="">すべての状態</option>
+            <option value={POST_STATUS.DRAFT}>{POST_STATUS.DRAFT}</option>
+            <option value={POST_STATUS.PUBLISHED}>
+              {POST_STATUS.PUBLISHED}
+            </option>
+          </select>
+          <select
+            aria-label="公開年で絞り込み"
+            value={yearFilter}
+            onChange={(e) => {
+              setYearFilter(e.target.value);
+              if (!e.target.value) setMonthFilter("");
+              setListPage(1);
+            }}
+          >
+            <option value="">すべての年</option>
+            {publishedYears.map((y) => (
+              <option key={y} value={y}>
+                {y}年
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label="公開月で絞り込み"
+            value={monthFilter}
+            disabled={!yearFilter}
+            onChange={(e) => {
+              setMonthFilter(e.target.value);
+              setListPage(1);
+            }}
+          >
+            <option value="">すべての月</option>
+            {Array.from({ length: 12 }, (_, i) => {
+              const value = String(i + 1).padStart(2, "0");
+              return (
+                <option key={value} value={value}>
+                  {i + 1}月
+                </option>
+              );
+            })}
+          </select>
+        </div>
+        <Pager
+          page={currentListPage}
+          pageCount={listPageCount}
+          onChange={setListPage}
+        />
+      </div>
+
       <table className="table" style={{ marginBottom: "var(--space-6)" }}>
         <thead>
           <tr>
@@ -319,7 +415,7 @@ export default function BlogAdminPage() {
           </tr>
         </thead>
         <tbody>
-          {items.map((post) => (
+          {pagedItems.map((post) => (
             <tr key={post.id}>
               <td>{post.title}</td>
               <td>
@@ -348,6 +444,13 @@ export default function BlogAdminPage() {
               </td>
             </tr>
           ))}
+          {pagedItems.length === 0 && (
+            <tr>
+              <td colSpan={4} className="muted">
+                該当する記事がありません。
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
 

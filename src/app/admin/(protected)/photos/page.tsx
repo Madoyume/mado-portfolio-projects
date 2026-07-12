@@ -2,10 +2,11 @@
 
 import type { InferResponseType } from "hono/client";
 import { useEffect, useState } from "react";
+import { Pager } from "@/components/admin/pager";
 import { TagInput } from "@/components/admin/tag-input";
 import { AdminTopbar } from "@/components/admin/topbar";
 import { UploadButton } from "@/components/admin/upload-button";
-import { PHOTOS_FOLDER } from "@/lib/constants";
+import { ADMIN_PHOTOS_PAGE_SIZE, PHOTOS_FOLDER } from "@/lib/constants";
 import { client } from "@/lib/rpc";
 import { uploadToCloudinary } from "@/lib/upload";
 
@@ -25,6 +26,7 @@ export default function PhotosAdminPage() {
   const [items, setItems] = useState<Photo[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [listPage, setListPage] = useState(1);
   const [form, setForm] = useState<PhotoForm>({
     title: "",
     description: "",
@@ -92,6 +94,16 @@ export default function PhotosAdminPage() {
       await load();
     }
   }
+
+  const listPageCount = Math.max(
+    1,
+    Math.ceil(items.length / ADMIN_PHOTOS_PAGE_SIZE),
+  );
+  const currentListPage = Math.min(listPage, listPageCount);
+  const pagedItems = items.slice(
+    (currentListPage - 1) * ADMIN_PHOTOS_PAGE_SIZE,
+    currentListPage * ADMIN_PHOTOS_PAGE_SIZE,
+  );
 
   return (
     <main className="admin__main">
@@ -176,9 +188,17 @@ export default function PhotosAdminPage() {
         </form>
       )}
 
+      <div className="admin-list-toolbar">
+        <Pager
+          page={currentListPage}
+          pageCount={listPageCount}
+          onChange={setListPage}
+        />
+      </div>
+
       {items.length > 0 ? (
         <div className="photo-admin-grid">
-          {items.map((photo) => (
+          {pagedItems.map((photo) => (
             <figure key={photo.id}>
               {photo.url ? (
                 <img src={photo.url} alt={photo.title ?? ""} />
