@@ -1162,7 +1162,20 @@ h4 {
   grid-template-columns: 200px 1fr;
   gap: var(--space-6);
   align-items: center;
-  padding-block: var(--space-7) var(--space-6);
+  padding-block: var(--space-7) var(--space-5);
+}
+.profile-bio {
+  white-space: pre-line;
+  line-height: 2;
+}
+.profile-bio a {
+  color: var(--link);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  word-break: break-all;
+}
+.profile-bio a:hover {
+  opacity: 0.75;
 }
 .profile-head img {
   width: 200px;

@@ -1,3 +1,4 @@
+import { LinkifyText } from "@/components/linkify-text";
 import { getCareers, getProfile, getSkills } from "@/lib/api";
 import { formatMonth } from "@/lib/format";
 
@@ -28,13 +29,14 @@ export default async function About() {
         <div>
           <h1>{profile?.name ?? "Mado"}</h1>
           <p className="muted">{profile?.headline}</p>
-          {profile?.bio && (
-            <p style={{ marginTop: "var(--space-3)", whiteSpace: "pre-line" }}>
-              {profile.bio}
-            </p>
-          )}
         </div>
       </section>
+
+      {profile?.bio && (
+        <p className="profile-bio">
+          <LinkifyText>{profile.bio}</LinkifyText>
+        </p>
+      )}
 
       <section className="section">
         <div className="section__head">
