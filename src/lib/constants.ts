@@ -44,6 +44,14 @@ export const SHARE_X_URL = "https://x.com/intent/post";
 export const SHARE_FACEBOOK_URL = "https://www.facebook.com/sharer/sharer.php";
 export const SHARE_COPY_FEEDBACK_MS = 2000;
 
+// # contact
+export const CONTACT_NAME_MAX = 100;
+export const CONTACT_EMAIL_MAX = 255;
+export const CONTACT_COMMENT_MAX = 2000;
+export const CONTACT_ENC_ALGO = "AES-GCM";
+export const CONTACT_ENC_IV_BYTES = 12;
+export const CONTACT_ENC_KEY_BYTES = 32;
+
 // # home
 export const HOME_FEATURED_LIMIT = 3;
 
@@ -51,3 +59,4 @@ export const HOME_FEATURED_LIMIT = 3;
 export const ADMIN_RECENT_COUNT = 5;
 export const ADMIN_BLOG_PAGE_SIZE = 5;
 export const ADMIN_PHOTOS_PAGE_SIZE = 20;
+export const ADMIN_MESSAGES_PAGE_SIZE = 10;

@@ -80,4 +80,19 @@ export const photos = sqliteTable("photos", {
   createdAt: text("created_at").notNull().$defaultFn(nowJst),
 });
 
-export const schema = { profile, careers, skills, posts, photos };
+export const contactMessages = sqliteTable("contact_messages", {
+  id: id(),
+  name: text("name").notNull(),
+  emailEncrypted: text("email_encrypted").notNull(),
+  comment: text("comment").notNull(),
+  createdAt: text("created_at").notNull().$defaultFn(nowJst),
+});
+
+export const schema = {
+  profile,
+  careers,
+  skills,
+  posts,
+  photos,
+  contactMessages,
+};

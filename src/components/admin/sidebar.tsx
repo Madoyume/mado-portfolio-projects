@@ -11,6 +11,7 @@ const items = [
   { href: "/admin/skills", label: "スキル" },
   { href: "/admin/blog", label: "ブログ" },
   { href: "/admin/photos", label: "写真" },
+  { href: "/admin/messages", label: "メッセージ" },
 ];
 
 export function AdminSidebar() {

@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { authRoute } from "./routes/auth";
 import { blogRoute } from "./routes/blog";
 import { careersRoute } from "./routes/careers";
+import { contactRoute } from "./routes/contact";
 import { photosRoute } from "./routes/photos";
 import { profileRoute } from "./routes/profile";
 import { skillsRoute } from "./routes/skills";
@@ -15,6 +16,7 @@ const app = new Hono()
   .route("/skills", skillsRoute)
   .route("/blog", blogRoute)
   .route("/photos", photosRoute)
+  .route("/contact", contactRoute)
   .route("/uploads", uploadsRoute);
 
 export { app };
