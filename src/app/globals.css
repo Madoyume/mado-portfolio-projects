@@ -1477,7 +1477,7 @@ h4 {
    ページ遷移演出
    ===================================================================== */
 main {
-  animation: page-enter 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: page-enter 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 @keyframes page-enter {
