@@ -478,11 +478,13 @@ export default function BlogAdminPage() {
               placeholder="my-post"
               value={form.slug}
               onChange={(e) => setForm({ ...form, slug: e.target.value })}
+              disabled={editingSlug !== null}
               required
             />
             <p className="field__hint">
-              本文への画像挿入には slug が必要です（保存先 {BLOG_FOLDER}
-              /&#123;slug&#125;）。
+              {editingSlug
+                ? "作成済み記事の slug は変更できません。"
+                : `本文への画像挿入には slug が必要です（保存先 ${BLOG_FOLDER}/{slug}）。`}
             </p>
           </div>
         </div>

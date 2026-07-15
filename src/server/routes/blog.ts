@@ -149,7 +149,7 @@ export const blogRoute = new Hono()
       .limit(1);
     const [row] = await db
       .update(posts)
-      .set({ ...data, coverImageId: coverToId(data) })
+      .set({ ...data, slug, coverImageId: coverToId(data) })
       .where(eq(posts.slug, slug))
       .returning();
     if (!row) return c.json({ message: "post not found" }, 404);
