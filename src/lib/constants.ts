@@ -13,7 +13,8 @@ export const JST_OFFSET = "+09:00";
 export const JST_OFFSET_MINUTES = 9 * 60;
 
 // # cloudinary
-export const CLOUDINARY_ROOT = "mado";
+export const CLOUDINARY_ROOT =
+  process.env.NEXT_PUBLIC_CLOUDINARY_ROOT ?? "mado_dev";
 export const CLOUDINARY_DELIVERY_BASE = "https://res.cloudinary.com";
 export const CLOUDINARY_API_BASE = "https://api.cloudinary.com/v1_1";
 
