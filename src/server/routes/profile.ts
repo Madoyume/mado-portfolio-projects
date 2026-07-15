@@ -45,6 +45,29 @@ function socialLinksToIds(links?: SocialLinkInput[] | null) {
   }));
 }
 
+type IconLink = { iconId?: string | null; iconIdDark?: string | null };
+
+function iconIds(links?: IconLink[] | null) {
+  return new Set(
+    (links ?? [])
+      .flatMap((l) => [l.iconId, l.iconIdDark])
+      .filter((id): id is string => !!id),
+  );
+}
+
+async function deleteRemovedIcons(
+  prev?: IconLink[] | null,
+  next?: IconLink[] | null,
+) {
+  const kept = iconIds(next);
+  for (const id of iconIds(prev)) {
+    if (kept.has(id)) continue;
+    try {
+      await deleteImage(withFolder(id, SOCIAL_FOLDER));
+    } catch {}
+  }
+}
+
 export const profileRoute = new Hono()
   .get("/", async (c) => {
     const [row] = await db
@@ -58,17 +81,26 @@ export const profileRoute = new Hono()
   .put("/", requireAuth, zJson(profileInput), async (c) => {
     const data = c.req.valid("json");
     const values = { ...data, socialLinks: socialLinksToIds(data.socialLinks) };
+    const [prev] = await db
+      .select({ socialLinks: profile.socialLinks })
+      .from(profile)
+      .where(eq(profile.id, PROFILE_ID))
+      .limit(1);
     const [updated] = await db
       .update(profile)
       .set(values)
       .where(eq(profile.id, PROFILE_ID))
       .returning();
-    if (updated) return c.json(withImages(updated));
-    const [created] = await db
-      .insert(profile)
-      .values({ ...values, id: PROFILE_ID })
-      .returning();
-    return c.json(withImages(created));
+    const row =
+      updated ??
+      (
+        await db
+          .insert(profile)
+          .values({ ...values, id: PROFILE_ID })
+          .returning()
+      )[0];
+    await deleteRemovedIcons(prev?.socialLinks, values.socialLinks);
+    return c.json(withImages(row));
   })
   .post("/hero-image", requireAuth, async (c) => {
     const [row] = await db

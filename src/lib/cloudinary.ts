@@ -51,6 +51,14 @@ export async function deleteImage(publicId: string) {
   await c.uploader.destroy(publicId, { resource_type: "image" });
 }
 
+export async function deleteImagesByPrefix(prefix: string) {
+  const c = configure();
+  await c.api.delete_resources_by_prefix(prefix, { resource_type: "image" });
+  try {
+    await c.api.delete_folder(prefix.replace(/\/$/, ""));
+  } catch {}
+}
+
 export type BlogImage = {
   url: string;
   publicId: string;

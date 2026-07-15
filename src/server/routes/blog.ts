@@ -3,7 +3,7 @@ import { and, desc, eq, isNotNull, lte, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { db } from "@/db/client";
 import { posts } from "@/db/schema";
-import { imageUrl } from "@/lib/cloudinary";
+import { deleteImage, deleteImagesByPrefix, imageUrl } from "@/lib/cloudinary";
 import { BLOG_FOLDER, POST_STATUS } from "@/lib/constants";
 import { nowJst } from "@/lib/datetime";
 import { stripFolder, withFolder } from "@/lib/public-id";
@@ -141,12 +141,23 @@ export const blogRoute = new Hono()
   })
   .put("/:slug", requireAuth, zJson(postInput), async (c) => {
     const data = c.req.valid("json");
+    const slug = c.req.param("slug");
+    const [prev] = await db
+      .select({ coverImageId: posts.coverImageId })
+      .from(posts)
+      .where(eq(posts.slug, slug))
+      .limit(1);
     const [row] = await db
       .update(posts)
       .set({ ...data, coverImageId: coverToId(data) })
-      .where(eq(posts.slug, c.req.param("slug")))
+      .where(eq(posts.slug, slug))
       .returning();
     if (!row) return c.json({ message: "post not found" }, 404);
+    if (prev?.coverImageId && prev.coverImageId !== row.coverImageId) {
+      try {
+        await deleteImage(withFolder(prev.coverImageId, BLOG_FOLDER));
+      } catch {}
+    }
     return c.json(withCover(row));
   })
   .delete("/:slug", requireAuth, async (c) => {
@@ -155,5 +166,11 @@ export const blogRoute = new Hono()
       .where(eq(posts.slug, c.req.param("slug")))
       .returning();
     if (!row) return c.json({ message: "post not found" }, 404);
+    try {
+      if (row.coverImageId) {
+        await deleteImage(withFolder(row.coverImageId, BLOG_FOLDER));
+      }
+      await deleteImagesByPrefix(`${BLOG_FOLDER}/${row.slug}/`);
+    } catch {}
     return c.body(null, 204);
   });
