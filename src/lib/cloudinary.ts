@@ -92,10 +92,10 @@ export async function listImages(folder: string): Promise<BlogImage[]> {
   );
 }
 
-export function imageUrl(publicId: string) {
+export function imageUrl(publicId: string, version = 1) {
   const cloud = process.env.CLOUDINARY_CLOUD_NAME;
   return cloud
-    ? `${CLOUDINARY_DELIVERY_BASE}/${cloud}/image/upload/v1/${publicId}`
+    ? `${CLOUDINARY_DELIVERY_BASE}/${cloud}/image/upload/v${version}/${publicId}`
     : null;
 }
 

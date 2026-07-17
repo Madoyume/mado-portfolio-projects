@@ -11,7 +11,7 @@ import {
   SOCIAL_FOLDER,
 } from "@/lib/constants";
 import { stripFolder, withFolder } from "@/lib/public-id";
-import { profileInput } from "@/schemas/profile";
+import { imageVersionInput, profileInput } from "@/schemas/profile";
 import { requireAuth } from "@/server/middleware/auth";
 import { zJson } from "@/server/validator";
 
@@ -23,8 +23,12 @@ type SocialLinkInput = NonNullable<
 function withImages(row: ProfileRow) {
   return {
     ...row,
-    avatarUrl: row.hasAvatar ? imageUrl(AVATAR_PUBLIC_ID) : null,
-    heroImageUrl: row.hasHero ? imageUrl(HERO_PUBLIC_ID) : null,
+    avatarUrl: row.avatarVersion
+      ? imageUrl(AVATAR_PUBLIC_ID, row.avatarVersion)
+      : null,
+    heroImageUrl: row.heroVersion
+      ? imageUrl(HERO_PUBLIC_ID, row.heroVersion)
+      : null,
     socialLinks: (row.socialLinks ?? []).map((l) => ({
       ...l,
       iconUrl: l.iconId ? imageUrl(withFolder(l.iconId, SOCIAL_FOLDER)) : null,
@@ -102,10 +106,11 @@ export const profileRoute = new Hono()
     await deleteRemovedIcons(prev?.socialLinks, values.socialLinks);
     return c.json(withImages(row));
   })
-  .post("/hero-image", requireAuth, async (c) => {
+  .post("/hero-image", requireAuth, zJson(imageVersionInput), async (c) => {
+    const { version } = c.req.valid("json");
     const [row] = await db
       .update(profile)
-      .set({ hasHero: true })
+      .set({ heroVersion: version })
       .where(eq(profile.id, PROFILE_ID))
       .returning();
     if (!row) return c.json({ message: "profile not found" }, 404);
@@ -117,16 +122,17 @@ export const profileRoute = new Hono()
     } catch {}
     const [row] = await db
       .update(profile)
-      .set({ hasHero: false })
+      .set({ heroVersion: null })
       .where(eq(profile.id, PROFILE_ID))
       .returning();
     if (!row) return c.json({ message: "profile not found" }, 404);
     return c.json(withImages(row));
   })
-  .post("/avatar", requireAuth, async (c) => {
+  .post("/avatar", requireAuth, zJson(imageVersionInput), async (c) => {
+    const { version } = c.req.valid("json");
     const [row] = await db
       .update(profile)
-      .set({ hasAvatar: true })
+      .set({ avatarVersion: version })
       .where(eq(profile.id, PROFILE_ID))
       .returning();
     if (!row) return c.json({ message: "profile not found" }, 404);
@@ -138,7 +144,7 @@ export const profileRoute = new Hono()
     } catch {}
     const [row] = await db
       .update(profile)
-      .set({ hasAvatar: false })
+      .set({ avatarVersion: null })
       .where(eq(profile.id, PROFILE_ID))
       .returning();
     if (!row) return c.json({ message: "profile not found" }, 404);

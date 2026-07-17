@@ -83,10 +83,10 @@ export default function ProfileAdminPage() {
   }
 
   async function uploadHero(file: File) {
-    const { url } = await uploadToCloudinary(file, {
+    const { url, version } = await uploadToCloudinary(file, {
       publicId: HERO_PUBLIC_ID,
     });
-    await client.api.profile["hero-image"].$post();
+    await client.api.profile["hero-image"].$post({ json: { version } });
     setForm((f) => ({ ...f, heroImageUrl: url }));
   }
 
@@ -96,10 +96,10 @@ export default function ProfileAdminPage() {
   }
 
   async function uploadAvatar(file: File) {
-    const { url } = await uploadToCloudinary(file, {
+    const { url, version } = await uploadToCloudinary(file, {
       publicId: AVATAR_PUBLIC_ID,
     });
-    await client.api.profile.avatar.$post();
+    await client.api.profile.avatar.$post({ json: { version } });
     setForm((f) => ({ ...f, avatarUrl: url }));
   }
 

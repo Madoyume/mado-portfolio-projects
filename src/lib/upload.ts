@@ -33,6 +33,7 @@ export async function uploadToCloudinary(
   return {
     url: data.secure_url as string,
     publicId: data.public_id as string,
+    version: data.version as number,
     width: data.width as number,
     height: data.height as number,
   };

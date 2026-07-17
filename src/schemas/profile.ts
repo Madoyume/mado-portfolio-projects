@@ -13,4 +13,8 @@ export const profileInput = createInsertSchema(profile, {
       }),
     )
     .nullish(),
-}).omit({ id: true, updatedAt: true, hasAvatar: true, hasHero: true });
+}).omit({ id: true, updatedAt: true, avatarVersion: true, heroVersion: true });
+
+export const imageVersionInput = z.object({
+  version: z.number().int().positive(),
+});

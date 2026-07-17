@@ -22,10 +22,8 @@ export const profile = sqliteTable("profile", {
   location: text("location"),
   email: text("email"),
   socialLinks: text("social_links", { mode: "json" }).$type<SocialLink[]>(),
-  hasAvatar: integer("has_avatar", { mode: "boolean" })
-    .notNull()
-    .default(false),
-  hasHero: integer("has_hero", { mode: "boolean" }).notNull().default(false),
+  avatarVersion: integer("avatar_version"),
+  heroVersion: integer("hero_version"),
   updatedAt: text("updated_at")
     .notNull()
     .$defaultFn(nowJst)
