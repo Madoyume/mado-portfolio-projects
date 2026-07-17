@@ -43,6 +43,13 @@
       "when": 1783880032298,
       "tag": "0005_yellow_makkari",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1784316409255,
+      "tag": "0006_profile-image-versions",
+      "breakpoints": true
     }
   ]
 }
