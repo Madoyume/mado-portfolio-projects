@@ -52,7 +52,7 @@ export function BlogArchive({
                 >
                   ▸
                 </span>
-                {year}
+                {year} ({items.reduce((sum, m) => sum + m.count, 0)})
               </button>
               <div className={`archive__panel${open ? " is-open" : ""}`}>
                 <ul className="archive__months">
