@@ -133,7 +133,9 @@ export const blogRoute = new Hono()
         .returning();
       return c.json(withCover(row), 201);
     } catch (err) {
-      if (err instanceof Error && /UNIQUE/i.test(err.message)) {
+      const cause =
+        err instanceof Error && err.cause instanceof Error ? err.cause : err;
+      if (cause instanceof Error && /UNIQUE/i.test(cause.message)) {
         return c.json({ message: "slug already exists" }, 409);
       }
       throw err;
