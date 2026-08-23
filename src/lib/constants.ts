@@ -3,7 +3,7 @@ export const SLUG_PATTERN = "[a-z0-9-]+";
 export const SLUG_REGEX = new RegExp(`^${SLUG_PATTERN}$`);
 
 export const SESSION_COOKIE = "session";
-export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24;
 
 export const LIST_LIMIT_DEFAULT = 20;
 export const LIST_LIMIT_MAX = 100;

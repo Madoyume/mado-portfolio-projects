@@ -1,4 +1,5 @@
 import { jwtVerify, SignJWT } from "jose";
+import { SESSION_MAX_AGE_SECONDS } from "./constants";
 import { getAuthEnv } from "./env";
 
 const alg = "HS256";
@@ -9,11 +10,12 @@ function key() {
 }
 
 export async function createSession() {
+  const issuedAt = Math.floor(Date.now() / 1000);
   return new SignJWT({})
     .setProtectedHeader({ alg })
     .setSubject(subject)
-    .setIssuedAt()
-    .setExpirationTime("7d")
+    .setIssuedAt(issuedAt)
+    .setExpirationTime(issuedAt + SESSION_MAX_AGE_SECONDS)
     .sign(key());
 }
 
