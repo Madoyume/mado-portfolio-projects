@@ -16,9 +16,16 @@ const cloudinarySchema = z.object({
   CLOUDINARY_API_SECRET: z.string().min(1),
 });
 
+const mailSchema = z.object({
+  RESEND_API_KEY: z.string().min(1),
+  CONTACT_MAIL_TO: z.email(),
+  CONTACT_MAIL_FROM: z.string().min(1),
+});
+
 let dbCache: z.infer<typeof dbSchema> | undefined;
 let authCache: z.infer<typeof authSchema> | undefined;
 let cloudinaryCache: z.infer<typeof cloudinarySchema> | undefined;
+let mailCache: z.infer<typeof mailSchema> | undefined;
 
 export function getEnv() {
   if (!dbCache) dbCache = dbSchema.parse(process.env);
@@ -33,4 +40,9 @@ export function getAuthEnv() {
 export function getCloudinaryEnv() {
   if (!cloudinaryCache) cloudinaryCache = cloudinarySchema.parse(process.env);
   return cloudinaryCache;
+}
+
+export function getMailEnv() {
+  if (!mailCache) mailCache = mailSchema.parse(process.env);
+  return mailCache;
 }

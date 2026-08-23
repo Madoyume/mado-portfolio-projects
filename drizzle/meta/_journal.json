@@ -50,6 +50,13 @@
       "when": 1784316409255,
       "tag": "0006_profile-image-versions",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1787507332675,
+      "tag": "0007_drop_contact_email",
+      "breakpoints": true
     }
   ]
 }

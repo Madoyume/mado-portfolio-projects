@@ -26,6 +26,10 @@ export function ContactForm() {
         json: { name, email, comment, website },
       });
       if (res.ok) setDone(true);
+      else if (res.status === 429)
+        setError("送信が集中しています。時間をおいて再度お試しください。");
+      else if (res.status === 502)
+        setError("送信に失敗しました。時間をおいて再度お試しください。");
       else setError("送信に失敗しました。入力内容を確認してください。");
     } catch {
       setError("送信に失敗しました。時間をおいて再度お試しください。");

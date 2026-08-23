@@ -59,7 +59,6 @@ export default function MessagesAdminPage() {
           <tr>
             <th>受信日時</th>
             <th>Name</th>
-            <th>Email</th>
             <th>Comment</th>
             <th />
           </tr>
@@ -71,9 +70,6 @@ export default function MessagesAdminPage() {
                 {formatDateTime(message.createdAt)}
               </td>
               <td>{message.name}</td>
-              <td>
-                <a href={`mailto:${message.email}`}>{message.email}</a>
-              </td>
               <td style={{ whiteSpace: "pre-line" }}>{message.comment}</td>
               <td>
                 <div className="row-actions">
@@ -90,7 +86,7 @@ export default function MessagesAdminPage() {
           ))}
           {pagedItems.length === 0 && (
             <tr>
-              <td colSpan={5} className="muted">
+              <td colSpan={4} className="muted">
                 メッセージはありません。
               </td>
             </tr>
