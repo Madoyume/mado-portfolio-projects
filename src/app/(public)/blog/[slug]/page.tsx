@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { MarkdownContent } from "@/components/markdown";
 import { ShareButtons } from "@/components/share-buttons";
 import { getPost } from "@/lib/api";
+import { SITE_LOCALE, SITE_NAME } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
 import { siteUrl } from "@/lib/site";
 
@@ -20,9 +21,13 @@ export async function generateMetadata({
     title: post.title,
     description: post.description ?? undefined,
     openGraph: {
+      type: "article",
+      siteName: SITE_NAME,
+      locale: SITE_LOCALE,
+      url: `/blog/${post.slug}`,
       title: post.title,
       description: post.description ?? undefined,
-      images: post.coverImageUrl ? [post.coverImageUrl] : undefined,
+      ...(post.coverImageUrl && { images: [post.coverImageUrl] }),
     },
   };
 }

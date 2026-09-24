@@ -12,6 +12,20 @@ export const TIMEZONE = "Asia/Tokyo";
 export const JST_OFFSET = "+09:00";
 export const JST_OFFSET_MINUTES = 9 * 60;
 
+// # site
+export const SITE_NAME = "Mado";
+export const SITE_LOCALE = "ja_JP";
+
+export const OG_IMAGE_SIZE = { width: 1200, height: 630 };
+export const OG_IMAGE_CONTENT_TYPE = "image/png";
+export const OG_IMAGE_ALT = "Mado";
+export const OG_IMAGE_LOGO_SIZE = 360;
+export const OG_IMAGE_COLORS = {
+  background: "#fafaf8",
+  stroke: "#2f3a52",
+  panes: ["#c8d9ec", "#d9e6f4", "#b6c8de", "#eef2f7"],
+};
+
 // # cloudinary
 export const CLOUDINARY_ROOT =
   process.env.NEXT_PUBLIC_CLOUDINARY_ROOT ?? "mado_dev";
