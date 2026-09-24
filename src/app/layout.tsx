@@ -20,8 +20,8 @@ const notoSerif = Noto_Serif_JP({
   variable: "--font-noto-serif-jp",
 });
 
-const title = "Mado — Web Engineer";
-const description = "Mado のポートフォリオサイト。";
+const title = "Mado's Web";
+const description = "Mado's personal website.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
