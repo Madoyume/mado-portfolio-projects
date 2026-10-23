@@ -7,5 +7,6 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # コーディング方針
 
 ## コメント
+
 - **フロントエンド: コメントを書かない。**
 - **バックエンド: コメントは最小限。** 簡素にし、変更履歴・経緯・「〜を追加した」等の履歴的記述はしない。コードで自明なことは書かず、意図が読み取れない箇所のみ簡潔に補う。
