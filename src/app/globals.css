@@ -355,13 +355,79 @@ h4 {
   object-fit: cover;
   opacity: 0;
   transform: scale(1);
-  transition:
-    opacity 1.8s ease,
-    transform 8s ease;
+  transition: opacity 1.8s ease;
 }
 .hero__img.is-active {
   opacity: 1;
-  transform: scale(1.035);
+  animation-duration: 10s;
+  animation-fill-mode: both;
+  animation-timing-function: ease-out;
+}
+.hero__img--zoom-in {
+  animation-name: hero-zoom-in;
+}
+.hero__img--zoom-out {
+  animation-name: hero-zoom-out;
+}
+.hero__img--pan-left {
+  animation-name: hero-pan-left;
+}
+.hero__img--pan-right {
+  animation-name: hero-pan-right;
+}
+.hero__img--pan-up {
+  animation-name: hero-pan-up;
+}
+.hero__img--pan-down {
+  animation-name: hero-pan-down;
+}
+@keyframes hero-zoom-in {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.06);
+  }
+}
+@keyframes hero-zoom-out {
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1.01);
+  }
+}
+@keyframes hero-pan-left {
+  from {
+    transform: scale(1.07) translateX(2.5%);
+  }
+  to {
+    transform: scale(1.07) translateX(-2.5%);
+  }
+}
+@keyframes hero-pan-right {
+  from {
+    transform: scale(1.07) translateX(-2.5%);
+  }
+  to {
+    transform: scale(1.07) translateX(2.5%);
+  }
+}
+@keyframes hero-pan-up {
+  from {
+    transform: scale(1.07) translateY(2.5%);
+  }
+  to {
+    transform: scale(1.07) translateY(-2.5%);
+  }
+}
+@keyframes hero-pan-down {
+  from {
+    transform: scale(1.07) translateY(-2.5%);
+  }
+  to {
+    transform: scale(1.07) translateY(2.5%);
+  }
 }
 .hero::after {
   content: "";
@@ -397,6 +463,7 @@ h4 {
 @media (prefers-reduced-motion: reduce) {
   .hero__img,
   .hero__img.is-active {
+    animation: none;
     transform: none;
     transition: none;
   }
@@ -1822,25 +1889,22 @@ h4 {
 .action-menu {
   position: relative;
 }
-.action-menu summary {
+.action-menu__trigger {
   display: grid;
   width: 1.8rem;
   height: 1.8rem;
   place-items: center;
   color: var(--fg-sub);
+  background: transparent;
   cursor: pointer;
-  list-style: none;
   border: 1px solid transparent;
   border-radius: 999px;
   font-size: 1.1rem;
   line-height: 1;
 }
-.action-menu summary::-webkit-details-marker {
-  display: none;
-}
-.action-menu summary:hover,
-.action-menu summary:focus-visible,
-.action-menu[open] summary {
+.action-menu__trigger:hover,
+.action-menu__trigger:focus-visible,
+.action-menu__trigger[aria-expanded="true"] {
   color: var(--fg);
   background: var(--bg-elevated);
   border-color: var(--border);

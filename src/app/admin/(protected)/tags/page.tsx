@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Modal } from "@/components/admin/modal";
 import { AdminTopbar } from "@/components/admin/topbar";
 import { client } from "@/lib/rpc";
@@ -15,6 +21,59 @@ type Dialog =
   | { type: "merge-tag"; category: Category; tag: Tag }
   | { type: "delete-tag"; category: Category; tag: Tag };
 
+function ActionMenu({
+  id,
+  label,
+  openMenu,
+  onOpenChange,
+  children,
+}: {
+  id: string;
+  label: string;
+  openMenu: string | null;
+  onOpenChange: (id: string | null) => void;
+  children: ReactNode;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isOpen = openMenu === id;
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const closeWhenOutside = (event: PointerEvent) => {
+      if (!ref.current?.contains(event.target as Node)) onOpenChange(null);
+    };
+    const closeWithEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onOpenChange(null);
+    };
+    document.addEventListener("pointerdown", closeWhenOutside);
+    document.addEventListener("keydown", closeWithEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeWhenOutside);
+      document.removeEventListener("keydown", closeWithEscape);
+    };
+  }, [isOpen, onOpenChange]);
+
+  return (
+    <div className="action-menu" ref={ref}>
+      <button
+        type="button"
+        className="action-menu__trigger"
+        aria-controls={`${id}-items`}
+        aria-expanded={isOpen}
+        aria-label={label}
+        onClick={() => onOpenChange(isOpen ? null : id)}
+      >
+        …
+      </button>
+      {isOpen && (
+        <div className="action-menu__items" id={`${id}-items`} role="menu">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function TagsAdminPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [dialog, setDialog] = useState<Dialog | null>(null);
@@ -22,6 +81,7 @@ export default function TagsAdminPage() {
   const [targetTagId, setTargetTagId] = useState("");
   const [error, setError] = useState("");
   const [modalError, setModalError] = useState("");
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const res = await client.api["tag-categories"].$get();
@@ -46,6 +106,7 @@ export default function TagsAdminPage() {
   function openDialog(next: Dialog) {
     setError("");
     setModalError("");
+    setOpenMenu(null);
     setName(
       next.type === "rename-category"
         ? next.category.name
@@ -166,86 +227,90 @@ export default function TagsAdminPage() {
                   <h2>{category.name}</h2>
                   <p>{category.tags.length}件の子タグ</p>
                 </div>
-                <details className="action-menu">
-                  <summary aria-label={`${category.name}の操作`}>…</summary>
-                  <div className="action-menu__items" role="menu">
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() =>
-                        openDialog({ type: "rename-category", category })
-                      }
-                    >
-                      名前を変更
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      disabled={category.tags.length > 0}
-                      title={
-                        category.tags.length
-                          ? "子タグを整理してから削除できます"
-                          : undefined
-                      }
-                      onClick={() =>
-                        openDialog({ type: "delete-category", category })
-                      }
-                    >
-                      削除
-                    </button>
-                  </div>
-                </details>
+                <ActionMenu
+                  id={`category-${category.id}`}
+                  label={`${category.name}の操作`}
+                  onOpenChange={setOpenMenu}
+                  openMenu={openMenu}
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() =>
+                      openDialog({ type: "rename-category", category })
+                    }
+                  >
+                    名前を変更
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    disabled={category.tags.length > 0}
+                    title={
+                      category.tags.length
+                        ? "子タグを整理してから削除できます"
+                        : undefined
+                    }
+                    onClick={() =>
+                      openDialog({ type: "delete-category", category })
+                    }
+                  >
+                    削除
+                  </button>
+                </ActionMenu>
               </header>
               {category.tags.length ? (
                 <div className="tag-admin-card__tags">
                   {category.tags.map((tag) => (
                     <div className="tag-admin-card__tag" key={tag.id}>
                       <span className="tag">{tag.name}</span>
-                      <details className="action-menu">
-                        <summary aria-label={`${tag.name}の操作`}>…</summary>
-                        <div className="action-menu__items" role="menu">
-                          <button
-                            type="button"
-                            role="menuitem"
-                            onClick={() =>
-                              openDialog({
-                                type: "rename-tag",
-                                category,
-                                tag,
-                              })
-                            }
-                          >
-                            改名
-                          </button>
-                          <button
-                            type="button"
-                            role="menuitem"
-                            disabled={category.tags.length < 2}
-                            onClick={() =>
-                              openDialog({
-                                type: "merge-tag",
-                                category,
-                                tag,
-                              })
-                            }
-                          >
-                            統合
-                          </button>
-                          <button
-                            type="button"
-                            role="menuitem"
-                            onClick={() =>
-                              openDialog({
-                                type: "delete-tag",
-                                category,
-                                tag,
-                              })
-                            }
-                          >
-                            削除
-                          </button>
-                        </div>
-                      </details>
+                      <ActionMenu
+                        id={`tag-${tag.id}`}
+                        label={`${tag.name}の操作`}
+                        onOpenChange={setOpenMenu}
+                        openMenu={openMenu}
+                      >
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() =>
+                            openDialog({
+                              type: "rename-tag",
+                              category,
+                              tag,
+                            })
+                          }
+                        >
+                          改名
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          disabled={category.tags.length < 2}
+                          onClick={() =>
+                            openDialog({
+                              type: "merge-tag",
+                              category,
+                              tag,
+                            })
+                          }
+                        >
+                          統合
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() =>
+                            openDialog({
+                              type: "delete-tag",
+                              category,
+                              tag,
+                            })
+                          }
+                        >
+                          削除
+                        </button>
+                      </ActionMenu>
                     </div>
                   ))}
                 </div>
