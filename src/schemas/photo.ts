@@ -24,8 +24,8 @@ export const photoCreateInput = createInsertSchema(photos)
   .extend({ tagGroups: tagGroupsInput });
 
 export const photoListQuery = z.object({
-  categoryId: z.string().uuid().optional(),
-  tagId: z.string().uuid().optional(),
+  category: z.string().min(1).max(80).optional(),
+  tag: z.string().min(1).max(80).optional(),
   limit: z.coerce
     .number()
     .int()

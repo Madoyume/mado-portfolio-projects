@@ -13,13 +13,13 @@ type Photo = InferResponseType<
 export function PhotoGallery({
   initialItems,
   initialCursor,
-  categoryId,
-  tagId,
+  category,
+  tag,
 }: {
   initialItems: Photo[];
   initialCursor: string | null;
-  categoryId?: string;
-  tagId?: string;
+  category?: string;
+  tag?: string;
 }) {
   const [photos, setPhotos] = useState(initialItems);
   const [cursor, setCursor] = useState(initialCursor);
@@ -43,8 +43,8 @@ export function PhotoGallery({
         query: {
           limit: String(PHOTOS_PAGE_SIZE),
           cursor,
-          ...(categoryId ? { categoryId } : {}),
-          ...(tagId ? { tagId } : {}),
+          ...(category ? { category } : {}),
+          ...(tag ? { tag } : {}),
         },
       });
       if (res.ok) {
@@ -55,7 +55,7 @@ export function PhotoGallery({
     } finally {
       setLoading(false);
     }
-  }, [categoryId, cursor, loading, tagId]);
+  }, [category, cursor, loading, tag]);
 
   useEffect(() => {
     const el = sentinel.current;

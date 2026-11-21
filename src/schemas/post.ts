@@ -11,8 +11,8 @@ import {
 import { tagGroupsInput } from "./tag";
 
 export const postListQuery = z.object({
-  categoryId: z.string().uuid().optional(),
-  tagId: z.string().uuid().optional(),
+  category: z.string().min(1).max(80).optional(),
+  tag: z.string().min(1).max(80).optional(),
   month: z.string().regex(ARCHIVE_MONTH_REGEX).optional(),
   limit: z.coerce
     .number()

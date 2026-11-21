@@ -15,8 +15,8 @@ import { requireAuth } from "@/server/middleware/auth";
 import {
   getPhotoTagGroups,
   getPublicPhotoTagCategories,
-  isValidTagFilter,
   replacePhotoTags,
+  resolveTagFilter,
   TagInputError,
   validateTagGroups,
 } from "@/server/tag-service";
@@ -31,20 +31,21 @@ async function withTags<T extends { id: string }>(row: T) {
 
 export const photosRoute = new Hono()
   .get("/", zValidator("query", photoListQuery), async (c) => {
-    const { categoryId, tagId, limit, cursor } = c.req.valid("query");
-    if (!(await isValidTagFilter(categoryId, tagId))) {
+    const { category, tag, limit, cursor } = c.req.valid("query");
+    const tagFilter = await resolveTagFilter(category, tag);
+    if (!tagFilter) {
       return c.json({ message: "invalid tag filter" }, 422);
     }
     const conditions = [];
     if (cursor) conditions.push(sql`${sortKey} < ${cursor}`);
-    if (categoryId) {
+    if (tagFilter.categoryId) {
       conditions.push(
-        sql`EXISTS (SELECT 1 FROM photo_tags pt INNER JOIN tags t ON t.id = pt.tag_id WHERE pt.photo_id = ${photos.id} AND t.category_id = ${categoryId})`,
+        sql`EXISTS (SELECT 1 FROM photo_tags pt INNER JOIN tags t ON t.id = pt.tag_id WHERE pt.photo_id = ${photos.id} AND t.category_id = ${tagFilter.categoryId})`,
       );
     }
-    if (tagId) {
+    if (tagFilter.tagId) {
       conditions.push(
-        sql`EXISTS (SELECT 1 FROM photo_tags pt WHERE pt.photo_id = ${photos.id} AND pt.tag_id = ${tagId})`,
+        sql`EXISTS (SELECT 1 FROM photo_tags pt WHERE pt.photo_id = ${tagFilter.tagId})`,
       );
     }
 

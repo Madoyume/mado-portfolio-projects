@@ -12,16 +12,16 @@ export default async function Blog({
   searchParams,
 }: {
   searchParams: Promise<{
-    categoryId?: string;
-    tagId?: string;
+    category?: string;
+    tag?: string;
     month?: string;
     page?: string;
   }>;
 }) {
-  const { categoryId, tagId, month, page: rawPage } = await searchParams;
+  const { category, tag, month, page: rawPage } = await searchParams;
   const page = Math.max(1, Number(rawPage) || 1);
   const [{ items, total }, tags, archive] = await Promise.all([
-    getPosts({ categoryId, tagId, month, page, limit: BLOG_PAGE_SIZE }),
+    getPosts({ category, tag, month, page, limit: BLOG_PAGE_SIZE }),
     getBlogTags(),
     getBlogArchive(),
   ]);
@@ -41,8 +41,8 @@ export default async function Blog({
         <TagFilter
           categories={tags}
           pathname="/blog"
-          categoryId={categoryId}
-          tagId={tagId}
+          categoryName={category}
+          tagName={tag}
           month={month}
         />
 
@@ -50,8 +50,8 @@ export default async function Blog({
           items={items}
           page={page}
           pageCount={pageCount}
-          categoryId={categoryId}
-          tagId={tagId}
+          category={category}
+          tag={tag}
           month={month}
         />
       </section>

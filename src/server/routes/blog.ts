@@ -12,8 +12,8 @@ import { requireAuth } from "@/server/middleware/auth";
 import {
   getPostTagGroups,
   getPublicBlogTagCategories,
-  isValidTagFilter,
   replacePostTags,
+  resolveTagFilter,
   TagInputError,
   validateTagGroups,
 } from "@/server/tag-service";
@@ -40,8 +40,9 @@ function coverToId(data: { coverImageId?: string | null }) {
 
 export const blogRoute = new Hono()
   .get("/", zValidator("query", postListQuery), async (c) => {
-    const { categoryId, tagId, month, limit, page } = c.req.valid("query");
-    if (!(await isValidTagFilter(categoryId, tagId))) {
+    const { category, tag, month, limit, page } = c.req.valid("query");
+    const tagFilter = await resolveTagFilter(category, tag);
+    if (!tagFilter) {
       return c.json({ message: "invalid tag filter" }, 422);
     }
     const now = nowJst();
@@ -54,14 +55,14 @@ export const blogRoute = new Hono()
     if (month) {
       conditions.push(sql`substr(${posts.publishedAt}, 1, 7) = ${month}`);
     }
-    if (categoryId) {
+    if (tagFilter.categoryId) {
       conditions.push(
-        sql`EXISTS (SELECT 1 FROM post_tags pt INNER JOIN tags t ON t.id = pt.tag_id WHERE pt.post_id = ${posts.id} AND t.category_id = ${categoryId})`,
+        sql`EXISTS (SELECT 1 FROM post_tags pt INNER JOIN tags t ON t.id = pt.tag_id WHERE pt.post_id = ${posts.id} AND t.category_id = ${tagFilter.categoryId})`,
       );
     }
-    if (tagId)
+    if (tagFilter.tagId)
       conditions.push(
-        sql`EXISTS (SELECT 1 FROM post_tags pt WHERE pt.post_id = ${posts.id} AND pt.tag_id = ${tagId})`,
+        sql`EXISTS (SELECT 1 FROM post_tags pt WHERE pt.post_id = ${posts.id} AND pt.tag_id = ${tagFilter.tagId})`,
       );
     const where = and(...conditions);
 

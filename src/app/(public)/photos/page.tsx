@@ -10,11 +10,11 @@ export const metadata = { title: "Photos" };
 export default async function Photos({
   searchParams,
 }: {
-  searchParams: Promise<{ categoryId?: string; tagId?: string }>;
+  searchParams: Promise<{ category?: string; tag?: string }>;
 }) {
-  const { categoryId, tagId } = await searchParams;
+  const { category, tag } = await searchParams;
   const [{ items, nextCursor }, tags] = await Promise.all([
-    getPhotos({ categoryId, tagId, limit: PHOTOS_PAGE_SIZE }),
+    getPhotos({ category, tag, limit: PHOTOS_PAGE_SIZE }),
     getPhotoTags(),
   ]);
 
@@ -28,17 +28,17 @@ export default async function Photos({
       <TagFilter
         categories={tags}
         pathname="/photos"
-        categoryId={categoryId}
-        tagId={tagId}
+        categoryName={category}
+        tagName={tag}
       />
 
       {items.length > 0 ? (
         <PhotoGallery
-          key={`${categoryId ?? "all"}-${tagId ?? "all"}`}
+          key={`${category ?? "all"}-${tag ?? "all"}`}
           initialItems={items}
           initialCursor={nextCursor}
-          categoryId={categoryId}
-          tagId={tagId}
+          category={category}
+          tag={tag}
         />
       ) : (
         <p className="muted">写真がありません。</p>

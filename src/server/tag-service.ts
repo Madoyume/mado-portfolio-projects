@@ -236,12 +236,29 @@ export async function replacePhotoTags(
   });
 }
 
-export async function isValidTagFilter(categoryId?: string, tagId?: string) {
-  if (!tagId) return true;
-  const [tag] = await db
-    .select({ categoryId: tags.categoryId })
-    .from(tags)
-    .where(eq(tags.id, tagId))
+export async function resolveTagFilter(categoryName?: string, tagName?: string) {
+  if (!categoryName && !tagName) return {};
+  if (!categoryName) return null;
+  const normalizedCategoryName = normalizeTagName(categoryName);
+  if (!normalizedCategoryName) return null;
+  const [category] = await db
+    .select({ id: tagCategories.id })
+    .from(tagCategories)
+    .where(eq(tagCategories.normalizedName, normalizedCategoryName))
     .limit(1);
-  return Boolean(tag && (!categoryId || tag.categoryId === categoryId));
+  if (!category) return null;
+  if (!tagName) return { categoryId: category.id };
+  const normalizedTagName = normalizeTagName(tagName);
+  if (!normalizedTagName) return null;
+  const [tag] = await db
+    .select({ id: tags.id })
+    .from(tags)
+    .where(
+      and(
+        eq(tags.categoryId, category.id),
+        eq(tags.normalizedName, normalizedTagName),
+      ),
+    )
+    .limit(1);
+  return tag ? { categoryId: category.id, tagId: tag.id } : null;
 }

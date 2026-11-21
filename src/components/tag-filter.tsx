@@ -11,23 +11,23 @@ type TagCategory = {
 export function TagFilter({
   categories,
   pathname,
-  categoryId,
-  tagId,
+  categoryName,
+  tagName,
   month,
 }: {
   categories: TagCategory[];
   pathname: string;
-  categoryId?: string;
-  tagId?: string;
+  categoryName?: string;
+  tagName?: string;
   month?: string;
 }) {
   const router = useRouter();
-  const category = categories.find((item) => item.id === categoryId);
+  const category = categories.find((item) => item.name === categoryName);
 
-  function navigate(nextCategoryId?: string, nextTagId?: string) {
+  function navigate(nextCategoryName?: string, nextTagName?: string) {
     const params = new URLSearchParams();
-    if (nextCategoryId) params.set("categoryId", nextCategoryId);
-    if (nextTagId) params.set("tagId", nextTagId);
+    if (nextCategoryName) params.set("category", nextCategoryName);
+    if (nextTagName) params.set("tag", nextTagName);
     if (month) params.set("month", month);
     const query = params.toString();
     router.push(query ? `${pathname}?${query}` : pathname);
@@ -42,7 +42,7 @@ export function TagFilter({
           <button
             type="button"
             className="tag-filter__chip"
-            aria-pressed={!categoryId}
+            aria-pressed={!categoryName}
             onClick={() => navigate()}
           >
             すべて
@@ -51,9 +51,9 @@ export function TagFilter({
             <button
               type="button"
               className="tag-filter__chip"
-              aria-pressed={item.id === categoryId}
+              aria-pressed={item.name === categoryName}
               key={item.id}
-              onClick={() => navigate(item.id)}
+              onClick={() => navigate(item.name)}
             >
               {item.name}
             </button>
@@ -67,8 +67,8 @@ export function TagFilter({
             <button
               type="button"
               className="tag-filter__chip"
-              aria-pressed={!tagId}
-              onClick={() => navigate(category.id)}
+              aria-pressed={!tagName}
+              onClick={() => navigate(category.name)}
             >
               すべて
             </button>
@@ -76,9 +76,9 @@ export function TagFilter({
               <button
                 type="button"
                 className="tag-filter__chip"
-                aria-pressed={tag.id === tagId}
+                aria-pressed={tag.name === tagName}
                 key={tag.id}
-                onClick={() => navigate(category.id, tag.id)}
+                onClick={() => navigate(category.name, tag.name)}
               >
                 {tag.name}
               </button>
