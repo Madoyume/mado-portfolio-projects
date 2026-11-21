@@ -35,39 +35,57 @@ export function TagFilter({
 
   if (categories.length === 0) return null;
   return (
-    <div className="tag-filter">
-      <label>
-        分類
-        <select
-          value={categoryId ?? ""}
-          onChange={(event) => navigate(event.target.value || undefined)}
-        >
-          <option value="">すべて</option>
-          {categories.map((item) => (
-            <option key={item.id} value={item.id}>
-              {item.name}
-            </option>
-          ))}
-        </select>
-      </label>
-      {category && (
-        <label>
-          タグ
-          <select
-            value={tagId ?? ""}
-            onChange={(event) =>
-              navigate(category.id, event.target.value || undefined)
-            }
+    <nav className="tag-filter" aria-label="タグで絞り込み">
+      <div className="tag-filter__row">
+        <span className="tag-filter__label">分類</span>
+        <div className="tag-filter__chips" role="group" aria-label="分類">
+          <button
+            type="button"
+            className="tag-filter__chip"
+            aria-pressed={!categoryId}
+            onClick={() => navigate()}
           >
-            <option value="">すべてのタグ</option>
+            すべて
+          </button>
+          {categories.map((item) => (
+            <button
+              type="button"
+              className="tag-filter__chip"
+              aria-pressed={item.id === categoryId}
+              key={item.id}
+              onClick={() => navigate(item.id)}
+            >
+              {item.name}
+            </button>
+          ))}
+        </div>
+      </div>
+      {category && (
+        <div className="tag-filter__row">
+          <span className="tag-filter__label">タグ</span>
+          <div className="tag-filter__chips" role="group" aria-label="タグ">
+            <button
+              type="button"
+              className="tag-filter__chip"
+              aria-pressed={!tagId}
+              onClick={() => navigate(category.id)}
+            >
+              すべて
+            </button>
             {category.tags.map((tag) => (
-              <option key={tag.id} value={tag.id}>
+              <button
+                type="button"
+                className="tag-filter__chip"
+                aria-pressed={tag.id === tagId}
+                key={tag.id}
+                onClick={() => navigate(category.id, tag.id)}
+              >
                 {tag.name}
-              </option>
+              </button>
             ))}
-          </select>
-        </label>
+          </div>
+        </div>
       )}
-    </div>
+    </nav>
   );
 }

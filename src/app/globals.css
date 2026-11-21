@@ -781,7 +781,7 @@ h4 {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 1000;
   display: grid;
   place-items: center;
   padding: var(--space-4);
@@ -812,6 +812,11 @@ h4 {
   flex-wrap: wrap;
   gap: var(--space-3);
   margin-top: var(--space-4);
+}
+.modal__description {
+  color: var(--fg-sub);
+  line-height: 1.8;
+  margin-bottom: var(--space-4);
 }
 .image-picker {
   display: grid;
@@ -1679,18 +1684,53 @@ h4 {
   width: 180px;
 }
 .tag-filter {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
+  display: grid;
+  gap: var(--space-2);
   margin-bottom: var(--space-5);
 }
-.tag-filter label {
-  display: grid;
-  gap: 6px;
+.tag-filter__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.tag-filter__label {
+  flex: 0 0 2.5rem;
   color: var(--fg-sub);
   font-size: 0.78rem;
+  letter-spacing: 0.08em;
 }
-.tag-filter select,
+.tag-filter__chips {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 2px 1px 6px;
+  scrollbar-width: thin;
+}
+.tag-filter__chip {
+  flex: 0 0 auto;
+  color: var(--fg-sub);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+.tag-filter__chip:hover,
+.tag-filter__chip:focus-visible {
+  color: var(--fg);
+  border-color: var(--fg-sub);
+}
+.tag-filter__chip[aria-pressed="true"] {
+  color: var(--bg);
+  background: var(--fg);
+  border-color: var(--fg);
+}
 .tag-editor select,
 .tag-editor input {
   min-width: 180px;
@@ -1718,20 +1758,123 @@ h4 {
   display: grid;
   gap: var(--space-4);
   margin-top: var(--space-5);
-  max-width: 760px;
+  max-width: 920px;
 }
-.tag-admin-list__head {
-  align-items: center;
-  margin-bottom: var(--space-3);
+.tag-admin__intro {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  max-width: 920px;
 }
-.tag-admin-list__head h2 {
+.tag-admin__description {
+  margin-top: var(--space-2);
+  color: var(--fg-sub);
+  font-size: 0.88rem;
+}
+.tag-admin-card {
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+}
+.tag-admin-card__head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.tag-admin-card__head h2 {
   margin: 0;
-  font-size: 1.05rem;
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  font-weight: 500;
 }
-.tag-admin-list__tag {
+.tag-admin-card__head p {
+  margin-top: 4px;
+  color: var(--fg-sub);
+  font-size: 0.78rem;
+}
+.tag-admin-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+.tag-admin-card__tag {
   display: inline-flex;
-  gap: 4px;
+  position: relative;
+  gap: 2px;
   align-items: center;
+}
+.tag-admin-card__tag .tag {
+  padding: 4px 10px;
+}
+.tag-admin-card__empty,
+.tag-admin-empty p {
+  color: var(--fg-sub);
+  font-size: 0.85rem;
+}
+.tag-admin-card__empty {
+  margin-top: var(--space-4);
+}
+.tag-admin-empty {
+  max-width: 920px;
+  margin-top: var(--space-5);
+}
+.action-menu {
+  position: relative;
+}
+.action-menu summary {
+  display: grid;
+  width: 1.8rem;
+  height: 1.8rem;
+  place-items: center;
+  color: var(--fg-sub);
+  cursor: pointer;
+  list-style: none;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+.action-menu summary::-webkit-details-marker {
+  display: none;
+}
+.action-menu summary:hover,
+.action-menu summary:focus-visible,
+.action-menu[open] summary {
+  color: var(--fg);
+  background: var(--bg-elevated);
+  border-color: var(--border);
+}
+.action-menu__items {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 6px);
+  right: 0;
+  display: grid;
+  min-width: 8.5rem;
+  padding: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.14);
+}
+.action-menu__items button {
+  padding: 8px 10px;
+  color: var(--fg);
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  font-size: 0.82rem;
+}
+.action-menu__items button:hover,
+.action-menu__items button:focus-visible {
+  background: var(--bg-elevated);
+}
+.action-menu__items button:disabled {
+  color: var(--fg-sub);
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 .photo-admin-grid {
   display: grid;

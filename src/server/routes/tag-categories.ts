@@ -153,10 +153,13 @@ export const tagCategoriesRoute = new Hono()
     const { targetTagId } = c.req.valid("json");
     if (id === targetTagId) return c.json({ message: "same tag" }, 422);
     const rows = await db
-      .select({ id: tags.id })
+      .select({ id: tags.id, categoryId: tags.categoryId })
       .from(tags)
       .where(inArray(tags.id, [id, targetTagId]));
     if (rows.length !== 2) return c.json({ message: "tag not found" }, 404);
+    if (rows[0].categoryId !== rows[1].categoryId) {
+      return c.json({ message: "tags must share a category" }, 422);
+    }
     await db.transaction(async (tx) => {
       const postRows = await tx
         .select({ postId: postTags.postId })

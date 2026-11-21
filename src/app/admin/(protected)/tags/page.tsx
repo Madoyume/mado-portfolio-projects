@@ -1,184 +1,387 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { Modal } from "@/components/admin/modal";
 import { AdminTopbar } from "@/components/admin/topbar";
 import { client } from "@/lib/rpc";
 
-type Category = {
-  id: string;
-  name: string;
-  tags: { id: string; name: string }[];
-};
+type Tag = { id: string; name: string };
+type Category = { id: string; name: string; tags: Tag[] };
+type Dialog =
+  | { type: "create" }
+  | { type: "rename-category"; category: Category }
+  | { type: "delete-category"; category: Category }
+  | { type: "rename-tag"; category: Category; tag: Tag }
+  | { type: "merge-tag"; category: Category; tag: Tag }
+  | { type: "delete-tag"; category: Category; tag: Tag };
 
 export default function TagsAdminPage() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [dialog, setDialog] = useState<Dialog | null>(null);
   const [name, setName] = useState("");
+  const [targetTagId, setTargetTagId] = useState("");
   const [error, setError] = useState("");
+  const [modalError, setModalError] = useState("");
 
-  async function load() {
+  const load = useCallback(async () => {
     const res = await client.api["tag-categories"].$get();
-    if (res.ok) setCategories(await res.json());
-  }
+    if (res.ok) {
+      setCategories(await res.json());
+      return;
+    }
+    setError("タグ分類の取得に失敗しました。");
+  }, []);
 
   useEffect(() => {
     load();
+  }, [load]);
+
+  const closeDialog = useCallback(() => {
+    setDialog(null);
+    setModalError("");
+    setName("");
+    setTargetTagId("");
   }, []);
 
-  async function create(event: React.FormEvent) {
-    event.preventDefault();
+  function openDialog(next: Dialog) {
     setError("");
-    const res = await client.api["tag-categories"].$post({ json: { name } });
+    setModalError("");
+    setName(
+      next.type === "rename-category"
+        ? next.category.name
+        : next.type === "rename-tag"
+          ? next.tag.name
+          : "",
+    );
+    setTargetTagId("");
+    setDialog(next);
+  }
+
+  async function submitName(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const nextName = name.trim();
+    if (!nextName || !dialog) return;
+
+    const res =
+      dialog.type === "create"
+        ? await client.api["tag-categories"].$post({ json: { name: nextName } })
+        : dialog.type === "rename-category"
+          ? await client.api["tag-categories"][":id"].$put({
+              param: { id: dialog.category.id },
+              json: { name: nextName },
+            })
+          : dialog.type === "rename-tag"
+            ? await client.api["tag-categories"].children[":id"].$put({
+                param: { id: dialog.tag.id },
+                json: { name: nextName },
+              })
+            : null;
+    if (!res) return;
     if (!res.ok) {
-      setError(
+      setModalError(
         res.status === 409
-          ? "同名の親タグが既にあります。"
-          : "作成に失敗しました。",
+          ? "同じ名前が既に登録されています。"
+          : "保存に失敗しました。入力内容を確認してください。",
       );
       return;
     }
-    setName("");
+    closeDialog();
     await load();
   }
 
-  async function renameCategory(category: Category) {
-    const name = window.prompt("親タグ名", category.name)?.trim();
-    if (!name || name === category.name) return;
-    const res = await client.api["tag-categories"][":id"].$put({
-      param: { id: category.id },
-      json: { name },
-    });
-    if (!res.ok) setError("親タグの更新に失敗しました。");
-    await load();
-  }
-
-  async function removeCategory(category: Category) {
-    if (!window.confirm(`「${category.name}」を削除しますか？`)) return;
-    const res = await client.api["tag-categories"][":id"].$delete({
-      param: { id: category.id },
-    });
-    if (!res.ok) setError("子タグが残る親タグは削除できません。");
-    await load();
-  }
-
-  async function renameTag(id: string, current: string) {
-    const name = window.prompt("子タグ名", current)?.trim();
-    if (!name || name === current) return;
-    const res = await client.api["tag-categories"].children[":id"].$put({
-      param: { id },
-      json: { name },
-    });
-    if (!res.ok)
-      setError(
-        "子タグの更新に失敗しました。同名タグがある場合は統合してください。",
-      );
-    await load();
-  }
-
-  async function mergeTag(id: string, current: string) {
-    const name = window.prompt("統合先の子タグ名", current)?.trim();
-    if (!name || name === current) return;
-    const candidates = categories.flatMap((category) => category.tags);
-    const target = candidates.find((tag) => tag.name === name);
-    if (!target || target.id === id) {
-      setError("統合先は登録済みの別の子タグ名を入力してください。");
-      return;
-    }
+  async function mergeTag() {
+    if (dialog?.type !== "merge-tag" || !targetTagId) return;
     const res = await client.api["tag-categories"].children[":id"].merge.$post({
-      param: { id },
-      json: { targetTagId: target.id },
+      param: { id: dialog.tag.id },
+      json: { targetTagId },
     });
-    if (!res.ok) setError("子タグの統合に失敗しました。");
+    if (!res.ok) {
+      setModalError("統合に失敗しました。もう一度お試しください。");
+      return;
+    }
+    closeDialog();
     await load();
   }
 
-  async function removeTag(id: string, name: string) {
-    if (!window.confirm(`未使用の子タグ「${name}」を削除しますか？`)) return;
-    const res = await client.api["tag-categories"].children[":id"].$delete({
-      param: { id },
-    });
-    if (!res.ok)
-      setError("使用中の子タグは削除できません。統合を利用してください。");
+  async function remove() {
+    if (
+      !dialog ||
+      (dialog.type !== "delete-category" && dialog.type !== "delete-tag")
+    )
+      return;
+    const res =
+      dialog.type === "delete-category"
+        ? await client.api["tag-categories"][":id"].$delete({
+            param: { id: dialog.category.id },
+          })
+        : await client.api["tag-categories"].children[":id"].$delete({
+            param: { id: dialog.tag.id },
+          });
+    if (!res.ok) {
+      setModalError(
+        dialog.type === "delete-category"
+          ? "子タグが残る親タグは削除できません。"
+          : "利用中の子タグは削除できません。統合を利用してください。",
+      );
+      return;
+    }
+    closeDialog();
     await load();
   }
+
+  const mergeTargets =
+    dialog?.type === "merge-tag"
+      ? dialog.category.tags.filter((tag) => tag.id !== dialog.tag.id)
+      : [];
+  const isNameDialog =
+    dialog?.type === "create" ||
+    dialog?.type === "rename-category" ||
+    dialog?.type === "rename-tag";
 
   return (
     <main className="admin__main">
       <AdminTopbar title="タグ管理" />
-      <form className="panel" onSubmit={create} style={{ maxWidth: 560 }}>
-        <div className="field">
-          <label htmlFor="category-name">親タグを追加</label>
-          <input
-            id="category-name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="Develop"
-            required
-          />
+      <section className="tag-admin__intro" aria-label="タグ管理の操作">
+        <div>
+          <p className="eyebrow">CONTENT TAXONOMY</p>
+          <p className="tag-admin__description">
+            親タグを整理し、子タグは記事・写真の編集時に登録します。
+          </p>
         </div>
-        <button type="submit" className="btn">
-          追加
+        <button
+          type="button"
+          className="btn"
+          onClick={() => openDialog({ type: "create" })}
+        >
+          親タグを追加
         </button>
-        {error && <p className="form-error">{error}</p>}
-      </form>
-      <div className="tag-admin-list">
-        {categories.map((category) => (
-          <section className="panel" key={category.id}>
-            <div className="section__head tag-admin-list__head">
-              <h2>{category.name}</h2>
-              <div className="row-actions">
-                <button
-                  type="button"
-                  className="btn btn--ghost btn--sm"
-                  onClick={() => renameCategory(category)}
-                >
-                  名前変更
-                </button>
-                <button
-                  type="button"
-                  className="btn btn--danger btn--sm"
-                  onClick={() => removeCategory(category)}
-                >
-                  削除
-                </button>
-              </div>
-            </div>
-            {category.tags.length ? (
-              <div className="tags">
-                {category.tags.map((tag) => (
-                  <span className="tag-admin-list__tag" key={tag.id}>
-                    <span className="tag">{tag.name}</span>
+      </section>
+      {error && <p className="form-error">{error}</p>}
+      {categories.length ? (
+        <div className="tag-admin-list">
+          {categories.map((category) => (
+            <section className="panel tag-admin-card" key={category.id}>
+              <header className="tag-admin-card__head">
+                <div>
+                  <h2>{category.name}</h2>
+                  <p>{category.tags.length}件の子タグ</p>
+                </div>
+                <details className="action-menu">
+                  <summary aria-label={`${category.name}の操作`}>…</summary>
+                  <div className="action-menu__items" role="menu">
                     <button
                       type="button"
-                      className="btn btn--ghost btn--sm"
-                      onClick={() => renameTag(tag.id, tag.name)}
+                      role="menuitem"
+                      onClick={() =>
+                        openDialog({ type: "rename-category", category })
+                      }
                     >
-                      改名
+                      名前を変更
                     </button>
                     <button
                       type="button"
-                      className="btn btn--ghost btn--sm"
-                      onClick={() => mergeTag(tag.id, tag.name)}
-                    >
-                      統合
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn--danger btn--sm"
-                      onClick={() => removeTag(tag.id, tag.name)}
+                      role="menuitem"
+                      disabled={category.tags.length > 0}
+                      title={
+                        category.tags.length
+                          ? "子タグを整理してから削除できます"
+                          : undefined
+                      }
+                      onClick={() =>
+                        openDialog({ type: "delete-category", category })
+                      }
                     >
                       削除
                     </button>
-                  </span>
-                ))}
+                  </div>
+                </details>
+              </header>
+              {category.tags.length ? (
+                <div className="tag-admin-card__tags">
+                  {category.tags.map((tag) => (
+                    <div className="tag-admin-card__tag" key={tag.id}>
+                      <span className="tag">{tag.name}</span>
+                      <details className="action-menu">
+                        <summary aria-label={`${tag.name}の操作`}>…</summary>
+                        <div className="action-menu__items" role="menu">
+                          <button
+                            type="button"
+                            role="menuitem"
+                            onClick={() =>
+                              openDialog({
+                                type: "rename-tag",
+                                category,
+                                tag,
+                              })
+                            }
+                          >
+                            改名
+                          </button>
+                          <button
+                            type="button"
+                            role="menuitem"
+                            disabled={category.tags.length < 2}
+                            onClick={() =>
+                              openDialog({
+                                type: "merge-tag",
+                                category,
+                                tag,
+                              })
+                            }
+                          >
+                            統合
+                          </button>
+                          <button
+                            type="button"
+                            role="menuitem"
+                            onClick={() =>
+                              openDialog({
+                                type: "delete-tag",
+                                category,
+                                tag,
+                              })
+                            }
+                          >
+                            削除
+                          </button>
+                        </div>
+                      </details>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="tag-admin-card__empty">タグなし</p>
+              )}
+            </section>
+          ))}
+        </div>
+      ) : (
+        <section className="panel tag-admin-empty">
+          <p>親タグがまだありません。</p>
+        </section>
+      )}
+
+      {dialog && (
+        <Modal onClose={closeDialog}>
+          {isNameDialog && (
+            <form onSubmit={submitName}>
+              <div className="modal__head">
+                <h2>
+                  {dialog.type === "create"
+                    ? "親タグを追加"
+                    : dialog.type === "rename-category"
+                      ? "親タグ名を変更"
+                      : "子タグ名を変更"}
+                </h2>
               </div>
-            ) : (
-              <p className="muted">
-                子タグは記事・写真の編集画面から追加できます。
+              <div className="field">
+                <label htmlFor="tag-dialog-name">
+                  {dialog.type === "rename-tag" ? "子タグ名" : "親タグ名"}
+                </label>
+                <input
+                  autoFocus
+                  id="tag-dialog-name"
+                  maxLength={80}
+                  onChange={(event) => setName(event.target.value)}
+                  required
+                  value={name}
+                />
+              </div>
+              {modalError && <p className="form-error">{modalError}</p>}
+              <div className="modal__actions">
+                <button
+                  type="button"
+                  className="btn btn--ghost"
+                  onClick={closeDialog}
+                >
+                  キャンセル
+                </button>
+                <button type="submit" className="btn">
+                  保存
+                </button>
+              </div>
+            </form>
+          )}
+
+          {dialog.type === "merge-tag" && (
+            <div>
+              <div className="modal__head">
+                <h2>子タグを統合</h2>
+              </div>
+              <p className="modal__description">
+                「{dialog.tag.name}
+                」に紐づく記事・写真を、選択した子タグへ移します。
               </p>
-            )}
-          </section>
-        ))}
-      </div>
+              <div className="field">
+                <label htmlFor="merge-target">統合先</label>
+                <select
+                  id="merge-target"
+                  value={targetTagId}
+                  onChange={(event) => setTargetTagId(event.target.value)}
+                >
+                  <option value="">統合先を選択</option>
+                  {mergeTargets.map((tag) => (
+                    <option value={tag.id} key={tag.id}>
+                      {tag.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {modalError && <p className="form-error">{modalError}</p>}
+              <div className="modal__actions">
+                <button
+                  type="button"
+                  className="btn btn--ghost"
+                  onClick={closeDialog}
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="button"
+                  className="btn"
+                  disabled={!targetTagId}
+                  onClick={mergeTag}
+                >
+                  統合する
+                </button>
+              </div>
+            </div>
+          )}
+
+          {(dialog.type === "delete-category" ||
+            dialog.type === "delete-tag") && (
+            <div>
+              <div className="modal__head">
+                <h2>削除の確認</h2>
+              </div>
+              <p className="modal__description">
+                「
+                {dialog.type === "delete-category"
+                  ? dialog.category.name
+                  : dialog.tag.name}
+                」を削除します。この操作は元に戻せません。
+              </p>
+              {modalError && <p className="form-error">{modalError}</p>}
+              <div className="modal__actions">
+                <button
+                  type="button"
+                  className="btn btn--ghost"
+                  onClick={closeDialog}
+                >
+                  キャンセル
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--danger"
+                  onClick={remove}
+                >
+                  削除する
+                </button>
+              </div>
+            </div>
+          )}
+        </Modal>
+      )}
     </main>
   );
 }

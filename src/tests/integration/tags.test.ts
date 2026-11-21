@@ -90,4 +90,34 @@ describe("タグ分類", () => {
     });
     expect(res.status).toBe(409);
   });
+
+  test("異なる親タグの子タグには統合できない", async () => {
+    const develop = await createCategory("Develop");
+    const hobby = await createCategory("Hobby");
+    await api("/api/blog", {
+      method: "POST",
+      json: postInput(develop.id, "Nextjs"),
+      cookie,
+    });
+    await api("/api/blog", {
+      method: "POST",
+      json: { ...postInput(hobby.id, "Camera"), slug: "post-camera" },
+      cookie,
+    });
+    const categories = await (
+      await api("/api/tag-categories", { cookie })
+    ).json();
+    const source = categories.find(
+      (category: { id: string }) => category.id === develop.id,
+    ).tags[0];
+    const target = categories.find(
+      (category: { id: string }) => category.id === hobby.id,
+    ).tags[0];
+    const res = await api(`/api/tag-categories/children/${source.id}/merge`, {
+      method: "POST",
+      json: { targetTagId: target.id },
+      cookie,
+    });
+    expect(res.status).toBe(422);
+  });
 });
