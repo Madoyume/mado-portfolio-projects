@@ -4,7 +4,7 @@ import type { InferRequestType, InferResponseType } from "hono/client";
 import { useEffect, useRef, useState } from "react";
 import { Modal } from "@/components/admin/modal";
 import { Pager } from "@/components/admin/pager";
-import { TagInput } from "@/components/admin/tag-input";
+import { TagEditor, type TagGroupValue } from "@/components/admin/tag-editor";
 import { AdminTopbar } from "@/components/admin/topbar";
 import { useUnsavedGuard } from "@/components/admin/unsaved-guard";
 import { UploadButton } from "@/components/admin/upload-button";
@@ -39,7 +39,7 @@ type PostForm = {
   body: string;
   coverImageId: string;
   coverPreview: string;
-  tags: string[];
+  tagGroups: TagGroupValue[];
   status: PostStatus;
   publishedAt: string;
 };
@@ -51,7 +51,7 @@ const blank: PostForm = {
   body: "",
   coverImageId: "",
   coverPreview: "",
-  tags: [],
+  tagGroups: [],
   status: POST_STATUS.DRAFT,
   publishedAt: "",
 };
@@ -110,7 +110,7 @@ export default function BlogAdminPage() {
       coverImageId: data.coverImageId || null,
       status: data.status,
       publishedAt,
-      tags: data.tags,
+      tagGroups: data.tagGroups,
     };
     const res = editing
       ? await client.api.blog[":slug"].$put({ param: { slug: editing }, json })
@@ -166,7 +166,10 @@ export default function BlogAdminPage() {
       body: post.body,
       coverImageId: post.coverImageId ?? "",
       coverPreview: post.coverImageUrl ?? "",
-      tags: post.tags ?? [],
+      tagGroups: (post.tags ?? []).map((category) => ({
+        categoryId: category.id,
+        names: category.tags.map((tag) => tag.name),
+      })),
       status: post.status,
       publishedAt: post.publishedAt ?? "",
     };
@@ -534,12 +537,10 @@ export default function BlogAdminPage() {
           </div>
         </div>
         <div className="field">
-          <label htmlFor="tags">タグ</label>
-          <TagInput
-            id="tags"
-            value={form.tags}
-            onChange={(tags) => setForm({ ...form, tags })}
-            placeholder="Enter で追加"
+          <label>タグ</label>
+          <TagEditor
+            value={form.tagGroups}
+            onChange={(tagGroups) => setForm({ ...form, tagGroups })}
           />
         </div>
         <div className="field image-field">

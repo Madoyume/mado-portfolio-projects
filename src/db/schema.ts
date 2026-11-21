@@ -1,4 +1,10 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+  unique,
+} from "drizzle-orm/sqlite-core";
 import { POST_STATUS, type PostStatus, PROFILE_ID } from "../lib/constants";
 import { nowJst } from "../lib/datetime";
 
@@ -30,6 +36,14 @@ export const profile = sqliteTable("profile", {
     .$onUpdateFn(nowJst),
 });
 
+export const heroImages = sqliteTable("hero_images", {
+  id: id(),
+  cloudinaryPublicId: text("cloudinary_public_id").notNull().unique(),
+  version: integer("version").notNull(),
+  sortOrder: integer("sort_order").notNull(),
+  createdAt: text("created_at").notNull().$defaultFn(nowJst),
+});
+
 export const careers = sqliteTable("careers", {
   id: id(),
   company: text("company").notNull(),
@@ -53,7 +67,6 @@ export const posts = sqliteTable("posts", {
   description: text("description"),
   body: text("body").notNull(),
   coverImageId: text("cover_image_id"),
-  tags: text("tags", { mode: "json" }).$type<string[]>(),
   status: text("status")
     .$type<PostStatus>()
     .notNull()
@@ -74,9 +87,57 @@ export const photos = sqliteTable("photos", {
   width: integer("width"),
   height: integer("height"),
   takenAt: text("taken_at"),
-  tags: text("tags", { mode: "json" }).$type<string[]>(),
   createdAt: text("created_at").notNull().$defaultFn(nowJst),
 });
+
+export const tagCategories = sqliteTable(
+  "tag_categories",
+  {
+    id: id(),
+    name: text("name").notNull(),
+    normalizedName: text("normalized_name").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: text("created_at").notNull().$defaultFn(nowJst),
+  },
+  (table) => [
+    unique("tag_categories_normalized_name_unique").on(table.normalizedName),
+  ],
+);
+
+export const tags = sqliteTable(
+  "tags",
+  {
+    id: id(),
+    categoryId: text("category_id").notNull(),
+    name: text("name").notNull(),
+    normalizedName: text("normalized_name").notNull(),
+    createdAt: text("created_at").notNull().$defaultFn(nowJst),
+  },
+  (table) => [
+    unique("tags_category_normalized_name_unique").on(
+      table.categoryId,
+      table.normalizedName,
+    ),
+  ],
+);
+
+export const postTags = sqliteTable(
+  "post_tags",
+  {
+    postId: text("post_id").notNull(),
+    tagId: text("tag_id").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.postId, table.tagId] })],
+);
+
+export const photoTags = sqliteTable(
+  "photo_tags",
+  {
+    photoId: text("photo_id").notNull(),
+    tagId: text("tag_id").notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.photoId, table.tagId] })],
+);
 
 export const contactMessages = sqliteTable("contact_messages", {
   id: id(),
@@ -87,9 +148,14 @@ export const contactMessages = sqliteTable("contact_messages", {
 
 export const schema = {
   profile,
+  heroImages,
   careers,
   skills,
   posts,
   photos,
+  tagCategories,
+  tags,
+  postTags,
+  photoTags,
   contactMessages,
 };

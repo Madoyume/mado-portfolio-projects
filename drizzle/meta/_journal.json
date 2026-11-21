@@ -57,6 +57,13 @@
       "when": 1787507332675,
       "tag": "0007_drop_contact_email",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1795184000000,
+      "tag": "0008_hero_images_and_tag_taxonomy",
+      "breakpoints": true
     }
   ]
 }

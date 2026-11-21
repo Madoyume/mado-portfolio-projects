@@ -8,9 +8,11 @@ import {
   POST_STATUS,
   SLUG_REGEX,
 } from "@/lib/constants";
+import { tagGroupsInput } from "./tag";
 
 export const postListQuery = z.object({
-  tag: z.string().optional(),
+  categoryId: z.string().uuid().optional(),
+  tagId: z.string().uuid().optional(),
   month: z.string().regex(ARCHIVE_MONTH_REGEX).optional(),
   limit: z.coerce
     .number()
@@ -24,5 +26,6 @@ export const postListQuery = z.object({
 export const postInput = createInsertSchema(posts, {
   slug: (s) => s.regex(SLUG_REGEX),
   status: z.enum([POST_STATUS.DRAFT, POST_STATUS.PUBLISHED]).optional(),
-  tags: z.array(z.string()).nullish(),
-}).omit({ id: true, createdAt: true, updatedAt: true });
+})
+  .omit({ id: true, createdAt: true, updatedAt: true })
+  .extend({ tagGroups: tagGroupsInput });

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { HeroCarousel } from "@/components/hero-carousel";
 import { getPhotos, getPosts, getProfile } from "@/lib/api";
 import { HOME_FEATURED_LIMIT } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
@@ -16,15 +17,11 @@ export default async function Home() {
 
   return (
     <main>
-      <section className="hero">
-        {profile?.heroImageUrl && (
-          <img className="hero__img" src={profile.heroImageUrl} alt="" />
-        )}
-        <div className="hero__inner fade">
-          <h1 className="hero__name">{profile?.name ?? "Mado"}</h1>
-          <p className="hero__role">{profile?.headline ?? "Web Engineer"}</p>
-        </div>
-      </section>
+      <HeroCarousel
+        images={profile?.heroImages ?? []}
+        name={profile?.name ?? "Mado"}
+        headline={profile?.headline ?? "Web Engineer"}
+      />
 
       <hr className="divider container" />
 

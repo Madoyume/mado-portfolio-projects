@@ -2,30 +2,30 @@ import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 import { z } from "zod";
 import { photos } from "@/db/schema";
 import { LIST_LIMIT_DEFAULT, LIST_LIMIT_MAX } from "@/lib/constants";
+import { tagGroupsInput } from "./tag";
 
-export const photoMetaInput = createUpdateSchema(photos, {
-  tags: z.array(z.string()).nullish(),
-}).pick({
-  title: true,
-  description: true,
-  takenAt: true,
-  tags: true,
-});
+export const photoMetaInput = createUpdateSchema(photos)
+  .pick({
+    title: true,
+    description: true,
+    takenAt: true,
+  })
+  .extend({ tagGroups: tagGroupsInput });
 
-export const photoCreateInput = createInsertSchema(photos, {
-  tags: z.array(z.string()).nullish(),
-}).pick({
-  cloudinaryPublicId: true,
-  width: true,
-  height: true,
-  title: true,
-  description: true,
-  takenAt: true,
-  tags: true,
-});
+export const photoCreateInput = createInsertSchema(photos)
+  .pick({
+    cloudinaryPublicId: true,
+    width: true,
+    height: true,
+    title: true,
+    description: true,
+    takenAt: true,
+  })
+  .extend({ tagGroups: tagGroupsInput });
 
 export const photoListQuery = z.object({
-  tag: z.string().optional(),
+  categoryId: z.string().uuid().optional(),
+  tagId: z.string().uuid().optional(),
   limit: z.coerce
     .number()
     .int()

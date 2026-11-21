@@ -35,6 +35,7 @@ export const CLOUDINARY_API_BASE = "https://api.cloudinary.com/v1_1";
 // # profile
 export const PROFILE_ID = "default";
 export const HERO_PUBLIC_ID = `${CLOUDINARY_ROOT}/hero`;
+export const HERO_FOLDER = `${CLOUDINARY_ROOT}/hero`;
 export const AVATAR_PUBLIC_ID = `${CLOUDINARY_ROOT}/avatar`;
 export const SOCIAL_FOLDER = `${CLOUDINARY_ROOT}/social`;
 

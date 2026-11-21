@@ -8,9 +8,15 @@ type Post = InferResponseType<
   200
 >["items"][number];
 
-function pageHref(page: number, tag?: string, month?: string) {
+function pageHref(
+  page: number,
+  categoryId?: string,
+  tagId?: string,
+  month?: string,
+) {
   const params = new URLSearchParams();
-  if (tag) params.set("tag", tag);
+  if (categoryId) params.set("categoryId", categoryId);
+  if (tagId) params.set("tagId", tagId);
   if (month) params.set("month", month);
   if (page > 1) params.set("page", String(page));
   const query = params.toString();
@@ -21,13 +27,15 @@ export function BlogList({
   items,
   page,
   pageCount,
-  tag,
+  categoryId,
+  tagId,
   month,
 }: {
   items: Post[];
   page: number;
   pageCount: number;
-  tag?: string;
+  categoryId?: string;
+  tagId?: string;
   month?: string;
 }) {
   if (items.length === 0) {
@@ -45,13 +53,15 @@ export function BlogList({
             <div>
               <h3>{post.title}</h3>
               {post.description && <p>{post.description}</p>}
-              {post.tags && post.tags.length > 0 && (
+              {post.tags.length > 0 && (
                 <div className="tags">
-                  {post.tags.map((t) => (
-                    <span className="tag" key={t}>
-                      {t}
-                    </span>
-                  ))}
+                  {post.tags.flatMap((category) =>
+                    category.tags.map((tag) => (
+                      <span className="tag" key={tag.id}>
+                        {category.name} / {tag.name}
+                      </span>
+                    )),
+                  )}
                 </div>
               )}
             </div>
@@ -64,7 +74,7 @@ export function BlogList({
           {page > 1 && (
             <Link
               className="pagination__btn"
-              href={pageHref(page - 1, tag, month)}
+              href={pageHref(page - 1, categoryId, tagId, month)}
               aria-label="前のページ"
             >
               ‹
@@ -74,7 +84,7 @@ export function BlogList({
             <Link
               key={p}
               className="pagination__btn"
-              href={pageHref(p, tag, month)}
+              href={pageHref(p, categoryId, tagId, month)}
               aria-current={p === page ? "page" : undefined}
             >
               {p}
@@ -83,7 +93,7 @@ export function BlogList({
           {page < pageCount && (
             <Link
               className="pagination__btn"
-              href={pageHref(page + 1, tag, month)}
+              href={pageHref(page + 1, categoryId, tagId, month)}
               aria-label="次のページ"
             >
               ›

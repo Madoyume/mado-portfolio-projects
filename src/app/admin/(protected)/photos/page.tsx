@@ -3,7 +3,7 @@
 import type { InferResponseType } from "hono/client";
 import { useEffect, useState } from "react";
 import { Pager } from "@/components/admin/pager";
-import { TagInput } from "@/components/admin/tag-input";
+import { TagEditor, type TagGroupValue } from "@/components/admin/tag-editor";
 import { AdminTopbar } from "@/components/admin/topbar";
 import { UploadButton } from "@/components/admin/upload-button";
 import { ADMIN_PHOTOS_PAGE_SIZE, PHOTOS_FOLDER } from "@/lib/constants";
@@ -19,7 +19,7 @@ type PhotoForm = {
   title: string;
   description: string;
   takenAt: string;
-  tags: string[];
+  tagGroups: TagGroupValue[];
 };
 
 export default function PhotosAdminPage() {
@@ -31,7 +31,7 @@ export default function PhotosAdminPage() {
     title: "",
     description: "",
     takenAt: "",
-    tags: [],
+    tagGroups: [],
   });
 
   async function load() {
@@ -50,7 +50,7 @@ export default function PhotosAdminPage() {
         folder: PHOTOS_FOLDER,
       });
       await client.api.photos.$post({
-        json: { cloudinaryPublicId: publicId, width, height },
+        json: { cloudinaryPublicId: publicId, width, height, tagGroups: [] },
       });
       await load();
     } finally {
@@ -64,7 +64,10 @@ export default function PhotosAdminPage() {
       title: photo.title ?? "",
       description: photo.description ?? "",
       takenAt: photo.takenAt ?? "",
-      tags: photo.tags ?? [],
+      tagGroups: (photo.tags ?? []).map((category) => ({
+        categoryId: category.id,
+        names: category.tags.map((tag) => tag.name),
+      })),
     });
   }
 
@@ -77,7 +80,7 @@ export default function PhotosAdminPage() {
         title: form.title || null,
         description: form.description || null,
         takenAt: form.takenAt || null,
-        tags: form.tags,
+        tagGroups: form.tagGroups,
       },
     });
     if (res.ok) {
@@ -165,12 +168,10 @@ export default function PhotosAdminPage() {
             />
           </div>
           <div className="field">
-            <label htmlFor="edit-tags">タグ</label>
-            <TagInput
-              id="edit-tags"
-              value={form.tags}
-              onChange={(tags) => setForm({ ...form, tags })}
-              placeholder="Enter で追加"
+            <label>タグ</label>
+            <TagEditor
+              value={form.tagGroups}
+              onChange={(tagGroups) => setForm({ ...form, tagGroups })}
             />
           </div>
           <div style={{ display: "flex", gap: "var(--space-3)" }}>

@@ -16,12 +16,18 @@ export const getSkills = cache(async () => {
   return res.ok ? await res.json() : [];
 });
 
-type PhotoQuery = { tag?: string; limit?: number; cursor?: string };
+type PhotoQuery = {
+  categoryId?: string;
+  tagId?: string;
+  limit?: number;
+  cursor?: string;
+};
 
 export const getPhotos = cache(async (query: PhotoQuery = {}) => {
   const res = await client.api.photos.$get({
     query: {
-      ...(query.tag ? { tag: query.tag } : {}),
+      ...(query.categoryId ? { categoryId: query.categoryId } : {}),
+      ...(query.tagId ? { tagId: query.tagId } : {}),
       ...(query.limit ? { limit: String(query.limit) } : {}),
       ...(query.cursor ? { cursor: query.cursor } : {}),
     },
@@ -35,7 +41,8 @@ export const getPhotoTags = cache(async () => {
 });
 
 type PostQuery = {
-  tag?: string;
+  categoryId?: string;
+  tagId?: string;
   month?: string;
   limit?: number;
   page?: number;
@@ -44,7 +51,8 @@ type PostQuery = {
 export const getPosts = cache(async (query: PostQuery = {}) => {
   const res = await client.api.blog.$get({
     query: {
-      ...(query.tag ? { tag: query.tag } : {}),
+      ...(query.categoryId ? { categoryId: query.categoryId } : {}),
+      ...(query.tagId ? { tagId: query.tagId } : {}),
       ...(query.month ? { month: query.month } : {}),
       ...(query.limit ? { limit: String(query.limit) } : {}),
       ...(query.page ? { page: String(query.page) } : {}),

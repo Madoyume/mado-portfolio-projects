@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { PhotoGallery } from "@/components/photo-gallery";
+import { TagFilter } from "@/components/tag-filter";
 import { getPhotos, getPhotoTags } from "@/lib/api";
 import { PHOTOS_PAGE_SIZE } from "@/lib/constants";
 
@@ -10,11 +10,11 @@ export const metadata = { title: "Photos" };
 export default async function Photos({
   searchParams,
 }: {
-  searchParams: Promise<{ tag?: string }>;
+  searchParams: Promise<{ categoryId?: string; tagId?: string }>;
 }) {
-  const { tag } = await searchParams;
+  const { categoryId, tagId } = await searchParams;
   const [{ items, nextCursor }, tags] = await Promise.all([
-    getPhotos({ tag, limit: PHOTOS_PAGE_SIZE }),
+    getPhotos({ categoryId, tagId, limit: PHOTOS_PAGE_SIZE }),
     getPhotoTags(),
   ]);
 
@@ -25,30 +25,20 @@ export default async function Photos({
         <h2>写真</h2>
       </div>
 
-      {tags.length > 0 && (
-        <div className="filters">
-          <Link href="/photos" className="tag" aria-pressed={!tag}>
-            すべて
-          </Link>
-          {tags.map((t) => (
-            <Link
-              key={t}
-              href={`/photos?tag=${encodeURIComponent(t)}`}
-              className="tag"
-              aria-pressed={tag === t}
-            >
-              {t}
-            </Link>
-          ))}
-        </div>
-      )}
+      <TagFilter
+        categories={tags}
+        pathname="/photos"
+        categoryId={categoryId}
+        tagId={tagId}
+      />
 
       {items.length > 0 ? (
         <PhotoGallery
-          key={tag ?? "all"}
+          key={`${categoryId ?? "all"}-${tagId ?? "all"}`}
           initialItems={items}
           initialCursor={nextCursor}
-          tag={tag}
+          categoryId={categoryId}
+          tagId={tagId}
         />
       ) : (
         <p className="muted">写真がありません。</p>

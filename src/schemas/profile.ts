@@ -18,3 +18,12 @@ export const profileInput = createInsertSchema(profile, {
 export const imageVersionInput = z.object({
   version: z.number().int().positive(),
 });
+
+export const heroImageInput = z.object({
+  publicId: z.string().min(1),
+  version: z.number().int().positive(),
+});
+
+export const heroImageOrderInput = z.object({
+  ids: z.array(z.string().uuid()),
+});

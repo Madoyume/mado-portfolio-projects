@@ -45,13 +45,15 @@ export default async function BlogDetail({
     <main>
       <article>
         <header className="post-header container">
-          {post.tags && post.tags.length > 0 && (
+          {post.tags.length > 0 && (
             <div className="tags">
-              {post.tags.map((tag) => (
-                <span className="tag" key={tag}>
-                  {tag}
-                </span>
-              ))}
+              {post.tags.flatMap((category) =>
+                category.tags.map((tag) => (
+                  <span className="tag" key={tag.id}>
+                    {category.name} / {tag.name}
+                  </span>
+                )),
+              )}
             </div>
           )}
           <h1>{post.title}</h1>

@@ -3,11 +3,7 @@
 import { useEffect, useState } from "react";
 import { AdminTopbar } from "@/components/admin/topbar";
 import { UploadButton } from "@/components/admin/upload-button";
-import {
-  AVATAR_PUBLIC_ID,
-  HERO_PUBLIC_ID,
-  SOCIAL_FOLDER,
-} from "@/lib/constants";
+import { AVATAR_PUBLIC_ID, HERO_FOLDER, SOCIAL_FOLDER } from "@/lib/constants";
 import { client } from "@/lib/rpc";
 import { uploadToCloudinary } from "@/lib/upload";
 
@@ -27,7 +23,7 @@ type ProfileForm = {
   location: string;
   email: string;
   avatarUrl: string;
-  heroImageUrl: string;
+  heroImages: { id: string; url: string }[];
   socialLinks: SocialLink[];
 };
 
@@ -38,7 +34,7 @@ const blank: ProfileForm = {
   location: "",
   email: "",
   avatarUrl: "",
-  heroImageUrl: "",
+  heroImages: [],
   socialLinks: [],
 };
 
@@ -57,7 +53,9 @@ export default function ProfileAdminPage() {
       location: p.location ?? "",
       email: p.email ?? "",
       avatarUrl: p.avatarUrl ?? "",
-      heroImageUrl: p.heroImageUrl ?? "",
+      heroImages: (p.heroImages ?? []).flatMap((image) =>
+        image.url ? [{ id: image.id, url: image.url }] : [],
+      ),
       socialLinks: (p.socialLinks ?? []).map((l) => ({
         label: l.label,
         url: l.url,
@@ -83,16 +81,32 @@ export default function ProfileAdminPage() {
   }
 
   async function uploadHero(file: File) {
-    const { url, version } = await uploadToCloudinary(file, {
-      publicId: HERO_PUBLIC_ID,
+    const { publicId, version } = await uploadToCloudinary(file, {
+      folder: HERO_FOLDER,
     });
-    await client.api.profile["hero-image"].$post({ json: { version } });
-    setForm((f) => ({ ...f, heroImageUrl: url }));
+    const res = await client.api.profile["hero-images"].$post({
+      json: { publicId, version },
+    });
+    if (res.ok) await load();
   }
 
-  async function removeHero() {
-    const res = await client.api.profile["hero-image"].$delete();
-    if (res.ok) setForm((f) => ({ ...f, heroImageUrl: "" }));
+  async function removeHero(id: string) {
+    if (!window.confirm("このヒーロー画像を削除しますか？")) return;
+    const res = await client.api.profile["hero-images"][":id"].$delete({
+      param: { id },
+    });
+    if (res.ok) await load();
+  }
+
+  async function moveHero(index: number, delta: number) {
+    const ids = form.heroImages.map((image) => image.id);
+    const target = index + delta;
+    if (target < 0 || target >= ids.length) return;
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    const res = await client.api.profile["hero-images"].order.$put({
+      json: { ids },
+    });
+    if (res.ok) await load();
   }
 
   async function uploadAvatar(file: File) {
@@ -229,24 +243,46 @@ export default function ProfileAdminPage() {
 
         <div className="field image-field">
           <label>ヒーロー画像</label>
-          {form.heroImageUrl && (
-            <img
-              src={form.heroImageUrl}
-              alt=""
-              className="hero-setting__preview"
-            />
+          {form.heroImages.length > 0 && (
+            <div className="hero-image-list">
+              {form.heroImages.map((image, index) => (
+                <div className="hero-image-list__item" key={image.id}>
+                  <img
+                    src={image.url}
+                    alt=""
+                    className="hero-setting__preview"
+                  />
+                  <div className="row-actions">
+                    <button
+                      type="button"
+                      className="btn btn--ghost btn--sm"
+                      disabled={index === 0}
+                      onClick={() => moveHero(index, -1)}
+                    >
+                      前へ
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--ghost btn--sm"
+                      disabled={index === form.heroImages.length - 1}
+                      onClick={() => moveHero(index, 1)}
+                    >
+                      次へ
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--danger btn--sm"
+                      onClick={() => removeHero(image.id)}
+                    >
+                      削除
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           )}
           <div className="image-field__actions">
-            <UploadButton label="画像をアップロード" onSelect={uploadHero} />
-            {form.heroImageUrl && (
-              <button
-                type="button"
-                className="btn btn--danger btn--sm"
-                onClick={removeHero}
-              >
-                画像を削除
-              </button>
-            )}
+            <UploadButton label="画像を追加" onSelect={uploadHero} />
           </div>
         </div>
 

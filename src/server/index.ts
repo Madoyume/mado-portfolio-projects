@@ -6,6 +6,7 @@ import { contactRoute } from "./routes/contact";
 import { photosRoute } from "./routes/photos";
 import { profileRoute } from "./routes/profile";
 import { skillsRoute } from "./routes/skills";
+import { tagCategoriesRoute } from "./routes/tag-categories";
 import { uploadsRoute } from "./routes/uploads";
 
 const app = new Hono()
@@ -16,6 +17,7 @@ const app = new Hono()
   .route("/skills", skillsRoute)
   .route("/blog", blogRoute)
   .route("/photos", photosRoute)
+  .route("/tag-categories", tagCategoriesRoute)
   .route("/contact", contactRoute)
   .route("/uploads", uploadsRoute);
 

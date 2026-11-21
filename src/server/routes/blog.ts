@@ -2,18 +2,30 @@ import { zValidator } from "@hono/zod-validator";
 import { and, desc, eq, isNotNull, lte, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { db } from "@/db/client";
-import { posts } from "@/db/schema";
+import { posts, postTags } from "@/db/schema";
 import { deleteImage, deleteImagesByPrefix, imageUrl } from "@/lib/cloudinary";
 import { BLOG_FOLDER, POST_STATUS } from "@/lib/constants";
 import { nowJst } from "@/lib/datetime";
 import { stripFolder, withFolder } from "@/lib/public-id";
 import { postInput, postListQuery } from "@/schemas/post";
 import { requireAuth } from "@/server/middleware/auth";
+import {
+  getPostTagGroups,
+  getPublicBlogTagCategories,
+  isValidTagFilter,
+  replacePostTags,
+  TagInputError,
+  validateTagGroups,
+} from "@/server/tag-service";
 import { zJson } from "@/server/validator";
 
-function withCover<T extends { coverImageId: string | null }>(row: T) {
+async function withCover<T extends { id: string; coverImageId: string | null }>(
+  row: T,
+) {
+  const tags = (await getPostTagGroups([row.id])).get(row.id) ?? [];
   return {
     ...row,
+    tags,
     coverImageUrl: row.coverImageId
       ? imageUrl(withFolder(row.coverImageId, BLOG_FOLDER))
       : null,
@@ -28,7 +40,10 @@ function coverToId(data: { coverImageId?: string | null }) {
 
 export const blogRoute = new Hono()
   .get("/", zValidator("query", postListQuery), async (c) => {
-    const { tag, month, limit, page } = c.req.valid("query");
+    const { categoryId, tagId, month, limit, page } = c.req.valid("query");
+    if (!(await isValidTagFilter(categoryId, tagId))) {
+      return c.json({ message: "invalid tag filter" }, 422);
+    }
     const now = nowJst();
 
     const conditions = [
@@ -39,11 +54,15 @@ export const blogRoute = new Hono()
     if (month) {
       conditions.push(sql`substr(${posts.publishedAt}, 1, 7) = ${month}`);
     }
-    if (tag) {
+    if (categoryId) {
       conditions.push(
-        sql`EXISTS (SELECT 1 FROM json_each(${posts.tags}) WHERE value = ${tag})`,
+        sql`EXISTS (SELECT 1 FROM post_tags pt INNER JOIN tags t ON t.id = pt.tag_id WHERE pt.post_id = ${posts.id} AND t.category_id = ${categoryId})`,
       );
     }
+    if (tagId)
+      conditions.push(
+        sql`EXISTS (SELECT 1 FROM post_tags pt WHERE pt.post_id = ${posts.id} AND pt.tag_id = ${tagId})`,
+      );
     const where = and(...conditions);
 
     const [items, [{ total }]] = await Promise.all([
@@ -53,7 +72,7 @@ export const blogRoute = new Hono()
           slug: posts.slug,
           title: posts.title,
           description: posts.description,
-          tags: posts.tags,
+          coverImageId: posts.coverImageId,
           publishedAt: posts.publishedAt,
         })
         .from(posts)
@@ -64,23 +83,10 @@ export const blogRoute = new Hono()
       db.select({ total: sql<number>`count(*)` }).from(posts).where(where),
     ]);
 
-    return c.json({ items, total });
+    return c.json({ items: await Promise.all(items.map(withCover)), total });
   })
   .get("/tags", async (c) => {
-    const now = nowJst();
-    const rows = await db
-      .select({ tags: posts.tags })
-      .from(posts)
-      .where(
-        and(
-          eq(posts.status, POST_STATUS.PUBLISHED),
-          isNotNull(posts.publishedAt),
-          lte(posts.publishedAt, now),
-        ),
-      );
-    const tags = new Set<string>();
-    for (const row of rows) for (const t of row.tags ?? []) tags.add(t);
-    return c.json([...tags].sort());
+    return c.json(await getPublicBlogTagCategories());
   })
   .get("/archive", async (c) => {
     const now = nowJst();
@@ -102,7 +108,7 @@ export const blogRoute = new Hono()
   })
   .get("/admin/all", requireAuth, async (c) => {
     const rows = await db.select().from(posts).orderBy(desc(posts.updatedAt));
-    return c.json(rows.map(withCover));
+    return c.json(await Promise.all(rows.map(withCover)));
   })
   .get("/:slug", async (c) => {
     const slug = c.req.param("slug");
@@ -122,17 +128,23 @@ export const blogRoute = new Hono()
       .limit(1);
 
     if (!row) return c.json({ message: "post not found" }, 404);
-    return c.json(withCover(row));
+    return c.json(await withCover(row));
   })
   .post("/", requireAuth, zJson(postInput), async (c) => {
     const data = c.req.valid("json");
     try {
+      const { tagGroups, ...values } = data;
+      await validateTagGroups(tagGroups);
       const [row] = await db
         .insert(posts)
-        .values({ ...data, coverImageId: coverToId(data) })
+        .values({ ...values, coverImageId: coverToId(values) })
         .returning();
-      return c.json(withCover(row), 201);
+      await replacePostTags(row.id, tagGroups);
+      return c.json(await withCover(row), 201);
     } catch (err) {
+      if (err instanceof TagInputError) {
+        return c.json({ message: err.message }, 422);
+      }
       const cause =
         err instanceof Error && err.cause instanceof Error ? err.cause : err;
       if (cause instanceof Error && /UNIQUE/i.test(cause.message)) {
@@ -143,6 +155,14 @@ export const blogRoute = new Hono()
   })
   .put("/:slug", requireAuth, zJson(postInput), async (c) => {
     const data = c.req.valid("json");
+    const { tagGroups, ...values } = data;
+    try {
+      await validateTagGroups(tagGroups);
+    } catch (err) {
+      if (err instanceof TagInputError)
+        return c.json({ message: err.message }, 422);
+      throw err;
+    }
     const slug = c.req.param("slug");
     const [prev] = await db
       .select({ coverImageId: posts.coverImageId })
@@ -151,22 +171,34 @@ export const blogRoute = new Hono()
       .limit(1);
     const [row] = await db
       .update(posts)
-      .set({ ...data, slug, coverImageId: coverToId(data) })
+      .set({ ...values, slug, coverImageId: coverToId(values) })
       .where(eq(posts.slug, slug))
       .returning();
     if (!row) return c.json({ message: "post not found" }, 404);
+    try {
+      await replacePostTags(row.id, tagGroups);
+    } catch (err) {
+      if (err instanceof TagInputError)
+        return c.json({ message: err.message }, 422);
+      throw err;
+    }
     if (prev?.coverImageId && prev.coverImageId !== row.coverImageId) {
       try {
         await deleteImage(withFolder(prev.coverImageId, BLOG_FOLDER));
       } catch {}
     }
-    return c.json(withCover(row));
+    return c.json(await withCover(row));
   })
   .delete("/:slug", requireAuth, async (c) => {
-    const [row] = await db
-      .delete(posts)
-      .where(eq(posts.slug, c.req.param("slug")))
-      .returning();
+    const [row] = await db.transaction(async (tx) => {
+      const [deleted] = await tx
+        .delete(posts)
+        .where(eq(posts.slug, c.req.param("slug")))
+        .returning();
+      if (deleted)
+        await tx.delete(postTags).where(eq(postTags.postId, deleted.id));
+      return [deleted];
+    });
     if (!row) return c.json({ message: "post not found" }, 404);
     try {
       if (row.coverImageId) {
