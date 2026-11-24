@@ -1,5 +1,11 @@
 import { beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import { api, loginCookie, migrateTestDb, resetDb } from "./helpers";
+import {
+  api,
+  createCategory,
+  loginCookie,
+  migrateTestDb,
+  resetDb,
+} from "./helpers";
 
 let cookie: string;
 
@@ -9,16 +15,6 @@ beforeAll(async () => {
 });
 
 beforeEach(resetDb);
-
-async function createCategory(name: string) {
-  const res = await api("/api/tag-categories", {
-    method: "POST",
-    json: { name },
-    cookie,
-  });
-  expect(res.status).toBe(201);
-  return res.json();
-}
 
 async function createPhoto(
   title: string,
@@ -49,8 +45,8 @@ async function listTitles(query: Record<string, string>) {
 
 describe("写真のタグ絞り込み", () => {
   test("親タグと子タグの双方に一致する写真だけを返す", async () => {
-    const vrchat = await createCategory("VRChat");
-    const landscape = await createCategory("landscape");
+    const vrchat = await createCategory("VRChat", cookie);
+    const landscape = await createCategory("landscape", cookie);
     await createPhoto("match-old", {
       takenAt: "2026-06-01",
       tagGroups: [{ categoryId: vrchat.id, names: ["night"] }],
@@ -74,7 +70,7 @@ describe("写真のタグ絞り込み", () => {
   });
 
   test("親タグだけを指定すると該当する写真をすべて返す", async () => {
-    const vrchat = await createCategory("VRChat");
+    const vrchat = await createCategory("VRChat", cookie);
     await createPhoto("a", {
       takenAt: "2026-07-01",
       tagGroups: [{ categoryId: vrchat.id, names: ["night"] }],
@@ -88,8 +84,12 @@ describe("写真のタグ絞り込み", () => {
     expect(await listTitles({ category: "VRChat" })).toEqual(["a", "b"]);
   });
 
+  test("子タグのみの指定は422を返す", async () => {
+    expect((await api("/api/photos?tag=night")).status).toBe(422);
+  });
+
   test("親タグと一致しない子タグは422を返す", async () => {
-    const vrchat = await createCategory("VRChat");
+    const vrchat = await createCategory("VRChat", cookie);
     await createPhoto("a", {
       tagGroups: [{ categoryId: vrchat.id, names: ["night"] }],
     });
@@ -123,7 +123,7 @@ describe("写真の月別アーカイブ", () => {
   });
 
   test("年月で絞り込め、タグと併用できる", async () => {
-    const vrchat = await createCategory("VRChat");
+    const vrchat = await createCategory("VRChat", cookie);
     const tagGroups = [{ categoryId: vrchat.id, names: ["night"] }];
     await createPhoto("july-tagged", { takenAt: "2026-07-01", tagGroups });
     await createPhoto("july", { takenAt: "2026-07-02" });
@@ -156,5 +156,42 @@ describe("写真の月別アーカイブ", () => {
   test("不正な年月は400を返す", async () => {
     const res = await api("/api/photos?month=2026-7");
     expect(res.status).toBe(400);
+  });
+});
+
+describe("写真の管理API", () => {
+  test("未認証では一覧・登録・更新・削除ができない", async () => {
+    const json = { cloudinaryPublicId: "a" };
+    expect((await api("/api/photos/admin/all")).status).toBe(401);
+    expect((await api("/api/photos", { method: "POST", json })).status).toBe(
+      401,
+    );
+    expect(
+      (await api("/api/photos/any", { method: "PUT", json: {} })).status,
+    ).toBe(401);
+    expect((await api("/api/photos/any", { method: "DELETE" })).status).toBe(
+      401,
+    );
+  });
+
+  test("タグを付け替えると以前のタグではヒットしない", async () => {
+    const vrchat = await createCategory("VRChat", cookie);
+    await createPhoto("a", {
+      tagGroups: [{ categoryId: vrchat.id, names: ["night"] }],
+    });
+    const { items } = await (await api("/api/photos")).json();
+    const res = await api(`/api/photos/${items[0].id}`, {
+      method: "PUT",
+      json: {
+        title: "a",
+        tagGroups: [{ categoryId: vrchat.id, names: ["friend"] }],
+      },
+      cookie,
+    });
+    expect(res.status).toBe(200);
+    expect(await listTitles({ category: "VRChat", tag: "night" })).toEqual([]);
+    expect(await listTitles({ category: "VRChat", tag: "friend" })).toEqual([
+      "a",
+    ]);
   });
 });

@@ -1,5 +1,11 @@
 import { beforeAll, beforeEach, describe, expect, test } from "bun:test";
-import { api, loginCookie, migrateTestDb, resetDb } from "./helpers";
+import {
+  api,
+  createCategory,
+  loginCookie,
+  migrateTestDb,
+  resetDb,
+} from "./helpers";
 
 let cookie: string;
 
@@ -103,5 +109,78 @@ describe("GET /api/blog/admin/all", () => {
       "draft-post",
       "published-post",
     ]);
+  });
+});
+
+describe("月別アーカイブと年月絞り込み", () => {
+  beforeEach(async () => {
+    for (const [slug, publishedAt] of [
+      ["june", "2020-06-30T23:59:59.000+09:00"],
+      ["july-first", "2020-07-01T00:00:00.000+09:00"],
+      ["july-last", "2020-07-31T23:59:59.000+09:00"],
+    ]) {
+      await createPost({ slug, status: "published", publishedAt });
+    }
+    await createPost({ slug: "draft", publishedAt: PAST });
+    await createPost({
+      slug: "future",
+      status: "published",
+      publishedAt: FUTURE,
+    });
+  });
+
+  test("公開済みの記事だけを新しい月順に集計する", async () => {
+    const res = await api("/api/blog/archive");
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual([
+      { month: "2020-07", count: 2 },
+      { month: "2020-06", count: 1 },
+    ]);
+  });
+
+  test("指定した年月の記事だけを新しい順に返す", async () => {
+    const list = await (await api("/api/blog?month=2020-07")).json();
+    expect(list.total).toBe(2);
+    expect(list.items.map((item: { slug: string }) => item.slug)).toEqual([
+      "july-last",
+      "july-first",
+    ]);
+  });
+
+  test("年月絞り込み中もページングでき、totalは全体件数を返す", async () => {
+    const list = await (
+      await api("/api/blog?month=2020-07&limit=1&page=2")
+    ).json();
+    expect(list.total).toBe(2);
+    expect(list.items.map((item: { slug: string }) => item.slug)).toEqual([
+      "july-first",
+    ]);
+  });
+
+  test("年月とタグを併用できる", async () => {
+    const category = await createCategory("Develop", cookie);
+    const tagGroups = [{ categoryId: category.id, names: ["Hono"] }];
+    await createPost({
+      slug: "july-tagged",
+      status: "published",
+      publishedAt: "2020-07-15T00:00:00.000+09:00",
+      tagGroups,
+    });
+    await createPost({
+      slug: "june-tagged",
+      status: "published",
+      publishedAt: "2020-06-15T00:00:00.000+09:00",
+      tagGroups,
+    });
+    const list = await (
+      await api("/api/blog?category=Develop&tag=Hono&month=2020-07")
+    ).json();
+    expect(list.items.map((item: { slug: string }) => item.slug)).toEqual([
+      "july-tagged",
+    ]);
+  });
+
+  test("不正な年月は400", async () => {
+    expect((await api("/api/blog?month=2020-7")).status).toBe(400);
   });
 });

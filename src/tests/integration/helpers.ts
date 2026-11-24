@@ -1,3 +1,4 @@
+import { expect } from "bun:test";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { db } from "@/db/client";
 import { schema } from "@/db/schema";
@@ -40,4 +41,14 @@ export async function loginCookie() {
     throw new Error(`login failed: ${res.status}`);
   }
   return setCookie.split(";")[0];
+}
+
+export async function createCategory(name: string, cookie: string) {
+  const res = await api("/api/tag-categories", {
+    method: "POST",
+    json: { name },
+    cookie,
+  });
+  expect(res.status).toBe(201);
+  return res.json();
 }
