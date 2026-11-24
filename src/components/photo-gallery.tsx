@@ -1,14 +1,42 @@
 "use client";
 
 import type { InferResponseType } from "hono/client";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { PHOTOS_PAGE_SIZE } from "@/lib/constants";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import {
+  GALLERY_COLUMNS,
+  GALLERY_COLUMNS_NARROW,
+  GALLERY_NARROW_QUERY,
+  PHOTOS_PAGE_SIZE,
+} from "@/lib/constants";
+import { distributeToColumns } from "@/lib/masonry";
 import { client } from "@/lib/rpc";
 
 type Photo = InferResponseType<
   typeof client.api.photos.$get,
   200
 >["items"][number];
+
+function subscribeNarrow(onChange: () => void) {
+  const query = window.matchMedia(GALLERY_NARROW_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
+
+function getColumnCount() {
+  return window.matchMedia(GALLERY_NARROW_QUERY).matches
+    ? GALLERY_COLUMNS_NARROW
+    : GALLERY_COLUMNS;
+}
+
+function getServerColumnCount() {
+  return GALLERY_COLUMNS;
+}
 
 export function PhotoGallery({
   initialItems,
@@ -28,6 +56,13 @@ export function PhotoGallery({
   const [loading, setLoading] = useState(false);
   const [index, setIndex] = useState<number | null>(null);
   const sentinel = useRef<HTMLDivElement | null>(null);
+
+  const columnCount = useSyncExternalStore(
+    subscribeNarrow,
+    getColumnCount,
+    getServerColumnCount,
+  );
+  const columns = distributeToColumns(photos, columnCount);
 
   const viewable = photos.filter((p) => p.url);
   const current = index !== null ? viewable[index] : null;
@@ -76,29 +111,39 @@ export function PhotoGallery({
   return (
     <>
       <div className="gallery">
-        {photos.map((photo) => {
-          if (!photo.url) {
-            return (
-              <figure key={photo.id}>
-                <div className="photo-placeholder" />
-              </figure>
-            );
-          }
-          const pos = viewable.findIndex((p) => p.id === photo.id);
-          return (
-            <figure
-              key={photo.id}
-              onClick={() => setIndex(pos)}
-              onKeyDown={(e) => e.key === "Enter" && setIndex(pos)}
-              tabIndex={0}
-              role="button"
-              aria-label={photo.title ?? "写真を拡大"}
-            >
-              <img src={photo.url} alt={photo.title ?? ""} loading="lazy" />
-              {photo.title && <figcaption>{photo.title}</figcaption>}
-            </figure>
-          );
-        })}
+        {columns.map((column, columnIndex) => (
+          <div className="gallery__column" key={columnIndex}>
+            {column.map((photo) => {
+              if (!photo.url) {
+                return (
+                  <figure key={photo.id}>
+                    <div className="photo-placeholder" />
+                  </figure>
+                );
+              }
+              const pos = viewable.findIndex((p) => p.id === photo.id);
+              return (
+                <figure
+                  key={photo.id}
+                  onClick={() => setIndex(pos)}
+                  onKeyDown={(e) => e.key === "Enter" && setIndex(pos)}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={photo.title ?? "写真を拡大"}
+                >
+                  <img
+                    src={photo.url}
+                    alt={photo.title ?? ""}
+                    width={photo.width ?? undefined}
+                    height={photo.height ?? undefined}
+                    loading="lazy"
+                  />
+                  {photo.title && <figcaption>{photo.title}</figcaption>}
+                </figure>
+              );
+            })}
+          </div>
+        ))}
       </div>
 
       {cursor && <div ref={sentinel} className="gallery__sentinel" />}

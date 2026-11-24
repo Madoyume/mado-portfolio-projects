@@ -44,6 +44,12 @@ export const SOCIAL_FOLDER = `${CLOUDINARY_ROOT}/social`;
 // # photos
 export const PHOTOS_FOLDER = `${CLOUDINARY_ROOT}/photos`;
 export const PHOTOS_PAGE_SIZE = 20;
+export const GALLERY_COLUMNS = 3;
+export const GALLERY_COLUMNS_NARROW = 2;
+export const GALLERY_NARROW_QUERY = "(max-width: 860px)";
+export const GALLERY_FALLBACK_RATIO = 4 / 3;
+export const GALLERY_CAPTION_RATIO = 0.09;
+export const GALLERY_COLUMN_TOLERANCE = 0.15;
 
 // # blog
 export const BLOG_FOLDER = `${CLOUDINARY_ROOT}/blog`;

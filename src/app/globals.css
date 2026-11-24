@@ -499,9 +499,15 @@ h4 {
 }
 
 .gallery {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: start;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.gallery__column {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
 }
 .gallery figure {
@@ -1372,9 +1378,6 @@ h4 {
   .photo-strip,
   .skills-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-  .gallery {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .profile-head {
     grid-template-columns: 1fr;
