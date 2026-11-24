@@ -1,7 +1,11 @@
 import { createInsertSchema, createUpdateSchema } from "drizzle-zod";
 import { z } from "zod";
 import { photos } from "@/db/schema";
-import { LIST_LIMIT_DEFAULT, LIST_LIMIT_MAX } from "@/lib/constants";
+import {
+  ARCHIVE_MONTH_REGEX,
+  LIST_LIMIT_DEFAULT,
+  LIST_LIMIT_MAX,
+} from "@/lib/constants";
 import { tagGroupsInput } from "./tag";
 
 export const photoMetaInput = createUpdateSchema(photos)
@@ -26,6 +30,7 @@ export const photoCreateInput = createInsertSchema(photos)
 export const photoListQuery = z.object({
   category: z.string().min(1).max(80).optional(),
   tag: z.string().min(1).max(80).optional(),
+  month: z.string().regex(ARCHIVE_MONTH_REGEX).optional(),
   limit: z.coerce
     .number()
     .int()

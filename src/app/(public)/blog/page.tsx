@@ -1,5 +1,5 @@
-import { BlogArchive } from "@/components/blog-archive";
 import { BlogList } from "@/components/blog-list";
+import { MonthArchive } from "@/components/month-archive";
 import { TagFilter } from "@/components/tag-filter";
 import { getBlogArchive, getBlogTags, getPosts } from "@/lib/api";
 import { BLOG_PAGE_SIZE } from "@/lib/constants";
@@ -30,7 +30,7 @@ export default async function Blog({
   return (
     <main className="container blog-layout">
       <aside className="blog-side">
-        <BlogArchive months={archive} active={month} />
+        <MonthArchive pathname="/blog" months={archive} active={month} />
       </aside>
       <section className="section">
         <div className="section__head">

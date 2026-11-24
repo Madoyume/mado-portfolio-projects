@@ -19,6 +19,7 @@ export const getSkills = cache(async () => {
 type PhotoQuery = {
   category?: string;
   tag?: string;
+  month?: string;
   limit?: number;
   cursor?: string;
 };
@@ -28,6 +29,7 @@ export const getPhotos = cache(async (query: PhotoQuery = {}) => {
     query: {
       ...(query.category ? { category: query.category } : {}),
       ...(query.tag ? { tag: query.tag } : {}),
+      ...(query.month ? { month: query.month } : {}),
       ...(query.limit ? { limit: String(query.limit) } : {}),
       ...(query.cursor ? { cursor: query.cursor } : {}),
     },
@@ -37,6 +39,11 @@ export const getPhotos = cache(async (query: PhotoQuery = {}) => {
 
 export const getPhotoTags = cache(async () => {
   const res = await client.api.photos.tags.$get();
+  return res.ok ? await res.json() : [];
+});
+
+export const getPhotoArchive = cache(async () => {
+  const res = await client.api.photos.archive.$get();
   return res.ok ? await res.json() : [];
 });
 

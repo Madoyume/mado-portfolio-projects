@@ -8,6 +8,8 @@ export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24;
 export const LIST_LIMIT_DEFAULT = 20;
 export const LIST_LIMIT_MAX = 100;
 
+export const ARCHIVE_MONTH_REGEX = /^\d{4}-\d{2}$/;
+
 export const TIMEZONE = "Asia/Tokyo";
 export const JST_OFFSET = "+09:00";
 export const JST_OFFSET_MINUTES = 9 * 60;
@@ -47,7 +49,6 @@ export const PHOTOS_PAGE_SIZE = 20;
 export const BLOG_FOLDER = `${CLOUDINARY_ROOT}/blog`;
 export const BLOG_PAGE_SIZE = 10;
 export const BLOG_IMAGE_LIST_MAX = 100;
-export const ARCHIVE_MONTH_REGEX = /^\d{4}-\d{2}$/;
 
 export const POST_STATUS = {
   DRAFT: "draft",

@@ -4,7 +4,7 @@ import { Hono } from "hono";
 import { db } from "@/db/client";
 import { photos, photoTags } from "@/db/schema";
 import { deleteImage, imageUrl } from "@/lib/cloudinary";
-import { PHOTOS_FOLDER } from "@/lib/constants";
+import { ARCHIVE_MONTH_REGEX, PHOTOS_FOLDER } from "@/lib/constants";
 import { stripFolder, withFolder } from "@/lib/public-id";
 import {
   photoCreateInput,
@@ -23,6 +23,7 @@ import {
 import { zJson } from "@/server/validator";
 
 const sortKey = sql`coalesce(${photos.takenAt}, ${photos.createdAt})`;
+const sortMonth = sql<string>`substr(${sortKey}, 1, 7)`;
 
 async function withTags<T extends { id: string }>(row: T) {
   const tags = (await getPhotoTagGroups([row.id])).get(row.id) ?? [];
@@ -31,13 +32,14 @@ async function withTags<T extends { id: string }>(row: T) {
 
 export const photosRoute = new Hono()
   .get("/", zValidator("query", photoListQuery), async (c) => {
-    const { category, tag, limit, cursor } = c.req.valid("query");
+    const { category, tag, month, limit, cursor } = c.req.valid("query");
     const tagFilter = await resolveTagFilter(category, tag);
     if (!tagFilter) {
       return c.json({ message: "invalid tag filter" }, 422);
     }
     const conditions = [];
     if (cursor) conditions.push(sql`${sortKey} < ${cursor}`);
+    if (month) conditions.push(sql`${sortMonth} = ${month}`);
     if (tagFilter.categoryId) {
       conditions.push(
         sql`EXISTS (SELECT 1 FROM photo_tags pt INNER JOIN tags t ON t.id = pt.tag_id WHERE pt.photo_id = ${photos.id} AND t.category_id = ${tagFilter.categoryId})`,
@@ -45,7 +47,7 @@ export const photosRoute = new Hono()
     }
     if (tagFilter.tagId) {
       conditions.push(
-        sql`EXISTS (SELECT 1 FROM photo_tags pt WHERE pt.photo_id = ${tagFilter.tagId})`,
+        sql`EXISTS (SELECT 1 FROM photo_tags pt WHERE pt.photo_id = ${photos.id} AND pt.tag_id = ${tagFilter.tagId})`,
       );
     }
 
@@ -69,6 +71,14 @@ export const photosRoute = new Hono()
     return c.json({ items, nextCursor });
   })
   .get("/tags", async (c) => c.json(await getPublicPhotoTagCategories()))
+  .get("/archive", async (c) => {
+    const rows = await db
+      .select({ month: sortMonth.as("month"), count: sql<number>`count(*)` })
+      .from(photos)
+      .groupBy(sortMonth)
+      .orderBy(desc(sortMonth));
+    return c.json(rows.filter((row) => ARCHIVE_MONTH_REGEX.test(row.month)));
+  })
   .get("/admin/all", requireAuth, async (c) => {
     const rows = await db
       .select()

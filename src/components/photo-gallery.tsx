@@ -15,11 +15,13 @@ export function PhotoGallery({
   initialCursor,
   category,
   tag,
+  month,
 }: {
   initialItems: Photo[];
   initialCursor: string | null;
   category?: string;
   tag?: string;
+  month?: string;
 }) {
   const [photos, setPhotos] = useState(initialItems);
   const [cursor, setCursor] = useState(initialCursor);
@@ -45,6 +47,7 @@ export function PhotoGallery({
           cursor,
           ...(category ? { category } : {}),
           ...(tag ? { tag } : {}),
+          ...(month ? { month } : {}),
         },
       });
       if (res.ok) {
@@ -55,7 +58,7 @@ export function PhotoGallery({
     } finally {
       setLoading(false);
     }
-  }, [category, cursor, loading, tag]);
+  }, [category, cursor, loading, month, tag]);
 
   useEffect(() => {
     const el = sentinel.current;

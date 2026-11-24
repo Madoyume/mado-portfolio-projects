@@ -5,10 +5,12 @@ import { useState } from "react";
 
 type ArchiveMonth = { month: string; count: number };
 
-export function BlogArchive({
+export function MonthArchive({
+  pathname,
   months,
   active,
 }: {
+  pathname: string;
   months: ArchiveMonth[];
   active?: string;
 }) {
@@ -61,8 +63,8 @@ export function BlogArchive({
                       <Link
                         href={
                           m.month === active
-                            ? "/blog"
-                            : `/blog?month=${m.month}`
+                            ? pathname
+                            : `${pathname}?month=${m.month}`
                         }
                         className="archive__month"
                         aria-current={m.month === active ? "true" : undefined}

@@ -236,7 +236,10 @@ export async function replacePhotoTags(
   });
 }
 
-export async function resolveTagFilter(categoryName?: string, tagName?: string) {
+export async function resolveTagFilter(
+  categoryName?: string,
+  tagName?: string,
+) {
   if (!categoryName && !tagName) return {};
   if (!categoryName) return null;
   const normalizedCategoryName = normalizeTagName(categoryName);
