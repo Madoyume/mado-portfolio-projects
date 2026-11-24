@@ -1,14 +1,12 @@
 "use client";
 
-export function UploadButton({
-  onSelect,
-  label = "画像を選択",
-  disabled = false,
-}: {
-  onSelect: (file: File) => void;
-  label?: string;
-  disabled?: boolean;
-}) {
+type UploadButtonProps = { label?: string; disabled?: boolean } & (
+  | { multiple?: false; onSelect: (file: File) => void }
+  | { multiple: true; onSelect: (files: File[]) => void }
+);
+
+export function UploadButton(props: UploadButtonProps) {
+  const { label = "画像を選択", disabled = false } = props;
   return (
     <label className="btn btn--ghost btn--sm">
       {label}
@@ -16,11 +14,14 @@ export function UploadButton({
         type="file"
         accept="image/*"
         className="visually-hidden"
+        multiple={props.multiple}
         disabled={disabled}
         onChange={(e) => {
-          const file = e.target.files?.[0];
+          const files = Array.from(e.target.files ?? []);
           e.target.value = "";
-          if (file) onSelect(file);
+          if (files.length === 0) return;
+          if (props.multiple) props.onSelect(files);
+          else props.onSelect(files[0]);
         }}
       />
     </label>

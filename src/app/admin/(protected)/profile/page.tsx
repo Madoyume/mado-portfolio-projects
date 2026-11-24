@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { HeroImageManager } from "@/components/admin/hero-image-manager";
 import { AdminTopbar } from "@/components/admin/topbar";
 import { UploadButton } from "@/components/admin/upload-button";
-import { AVATAR_PUBLIC_ID, HERO_FOLDER, SOCIAL_FOLDER } from "@/lib/constants";
+import { AVATAR_PUBLIC_ID, SOCIAL_FOLDER } from "@/lib/constants";
 import { client } from "@/lib/rpc";
 import { uploadToCloudinary } from "@/lib/upload";
 
@@ -23,7 +24,6 @@ type ProfileForm = {
   location: string;
   email: string;
   avatarUrl: string;
-  heroImages: { id: string; url: string }[];
   socialLinks: SocialLink[];
 };
 
@@ -34,7 +34,6 @@ const blank: ProfileForm = {
   location: "",
   email: "",
   avatarUrl: "",
-  heroImages: [],
   socialLinks: [],
 };
 
@@ -53,9 +52,6 @@ export default function ProfileAdminPage() {
       location: p.location ?? "",
       email: p.email ?? "",
       avatarUrl: p.avatarUrl ?? "",
-      heroImages: (p.heroImages ?? []).flatMap((image) =>
-        image.url ? [{ id: image.id, url: image.url }] : [],
-      ),
       socialLinks: (p.socialLinks ?? []).map((l) => ({
         label: l.label,
         url: l.url,
@@ -78,35 +74,6 @@ export default function ProfileAdminPage() {
         i === index ? { ...l, ...patch } : l,
       ),
     }));
-  }
-
-  async function uploadHero(file: File) {
-    const { publicId, version } = await uploadToCloudinary(file, {
-      folder: HERO_FOLDER,
-    });
-    const res = await client.api.profile["hero-images"].$post({
-      json: { publicId, version },
-    });
-    if (res.ok) await load();
-  }
-
-  async function removeHero(id: string) {
-    if (!window.confirm("このヒーロー画像を削除しますか？")) return;
-    const res = await client.api.profile["hero-images"][":id"].$delete({
-      param: { id },
-    });
-    if (res.ok) await load();
-  }
-
-  async function moveHero(index: number, delta: number) {
-    const ids = form.heroImages.map((image) => image.id);
-    const target = index + delta;
-    if (target < 0 || target >= ids.length) return;
-    [ids[index], ids[target]] = [ids[target], ids[index]];
-    const res = await client.api.profile["hero-images"].order.$put({
-      json: { ids },
-    });
-    if (res.ok) await load();
   }
 
   async function uploadAvatar(file: File) {
@@ -161,214 +128,175 @@ export default function ProfileAdminPage() {
   return (
     <main className="admin__main">
       <AdminTopbar title="プロフィール" />
-      <form className="panel" onSubmit={submit} style={{ maxWidth: 680 }}>
-        <div className="field-row">
-          <div className="field">
-            <label htmlFor="name">表示名</label>
-            <input
-              id="name"
-              type="text"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              required
-            />
+      <div className="profile-admin">
+        <form className="panel" onSubmit={submit} style={{ maxWidth: 680 }}>
+          <div className="field-row">
+            <div className="field">
+              <label htmlFor="name">表示名</label>
+              <input
+                id="name"
+                type="text"
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="headline">肩書き</label>
+              <input
+                id="headline"
+                type="text"
+                value={form.headline}
+                onChange={(e) => setForm({ ...form, headline: e.target.value })}
+                required
+              />
+            </div>
           </div>
           <div className="field">
-            <label htmlFor="headline">肩書き</label>
-            <input
-              id="headline"
-              type="text"
-              value={form.headline}
-              onChange={(e) => setForm({ ...form, headline: e.target.value })}
-              required
+            <label htmlFor="bio">自己紹介</label>
+            <textarea
+              id="bio"
+              value={form.bio}
+              onChange={(e) => setForm({ ...form, bio: e.target.value })}
             />
           </div>
-        </div>
-        <div className="field">
-          <label htmlFor="bio">自己紹介</label>
-          <textarea
-            id="bio"
-            value={form.bio}
-            onChange={(e) => setForm({ ...form, bio: e.target.value })}
-          />
-        </div>
-        <div className="field-row">
-          <div className="field">
-            <label htmlFor="location">所在地</label>
-            <input
-              id="location"
-              type="text"
-              value={form.location}
-              onChange={(e) => setForm({ ...form, location: e.target.value })}
-            />
+          <div className="field-row">
+            <div className="field">
+              <label htmlFor="location">所在地</label>
+              <input
+                id="location"
+                type="text"
+                value={form.location}
+                onChange={(e) => setForm({ ...form, location: e.target.value })}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="email">連絡先</label>
+              <input
+                id="email"
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+              />
+            </div>
           </div>
-          <div className="field">
-            <label htmlFor="email">連絡先</label>
-            <input
-              id="email"
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-            />
-          </div>
-        </div>
-        <div className="field image-field">
-          <label>アバター画像</label>
-          {form.avatarUrl && (
-            <img
-              src={form.avatarUrl}
-              alt=""
-              style={{
-                width: 96,
-                height: 96,
-                borderRadius: "50%",
-                objectFit: "cover",
-                border: "1px solid var(--border)",
-              }}
-            />
-          )}
-          <div className="image-field__actions">
-            <UploadButton label="画像をアップロード" onSelect={uploadAvatar} />
+          <div className="field image-field">
+            <label>アバター画像</label>
             {form.avatarUrl && (
+              <img
+                src={form.avatarUrl}
+                alt=""
+                style={{
+                  width: 96,
+                  height: 96,
+                  borderRadius: "50%",
+                  objectFit: "cover",
+                  border: "1px solid var(--border)",
+                }}
+              />
+            )}
+            <div className="image-field__actions">
+              <UploadButton
+                label="画像をアップロード"
+                onSelect={uploadAvatar}
+              />
+              {form.avatarUrl && (
+                <button
+                  type="button"
+                  className="btn btn--danger btn--sm"
+                  onClick={removeAvatar}
+                >
+                  画像を削除
+                </button>
+              )}
+            </div>
+          </div>
+
+          <h2
+            style={{
+              fontSize: "1rem",
+              margin: "var(--space-5) 0 var(--space-3)",
+            }}
+          >
+            SNS リンク
+          </h2>
+          {form.socialLinks.map((link, i) => (
+            <div className="sns-row" key={i}>
+              <div className="sns-icon">
+                {link.iconPreview && <img src={link.iconPreview} alt="" />}
+                <UploadButton
+                  label="通常"
+                  onSelect={(file) => uploadIcon(i, file, "iconId")}
+                />
+              </div>
+              <div className="sns-icon sns-icon--dark">
+                {link.iconPreviewDark && (
+                  <img src={link.iconPreviewDark} alt="" />
+                )}
+                <UploadButton
+                  label="ダーク"
+                  onSelect={(file) => uploadIcon(i, file, "iconIdDark")}
+                />
+              </div>
+              <div className="field">
+                <label>ラベル</label>
+                <input
+                  type="text"
+                  value={link.label}
+                  onChange={(e) => setLink(i, { label: e.target.value })}
+                />
+              </div>
+              <div className="field">
+                <label>URL</label>
+                <input
+                  type="url"
+                  value={link.url}
+                  onChange={(e) => setLink(i, { url: e.target.value })}
+                />
+              </div>
               <button
                 type="button"
                 className="btn btn--danger btn--sm"
-                onClick={removeAvatar}
+                onClick={() =>
+                  setForm({
+                    ...form,
+                    socialLinks: form.socialLinks.filter((_, j) => j !== i),
+                  })
+                }
               >
-                画像を削除
+                削除
               </button>
-            )}
-          </div>
-        </div>
-
-        <div className="field image-field">
-          <label>ヒーロー画像</label>
-          {form.heroImages.length > 0 && (
-            <div className="hero-image-list">
-              {form.heroImages.map((image, index) => (
-                <div className="hero-image-list__item" key={image.id}>
-                  <img
-                    src={image.url}
-                    alt=""
-                    className="hero-setting__preview"
-                  />
-                  <div className="row-actions">
-                    <button
-                      type="button"
-                      className="btn btn--ghost btn--sm"
-                      disabled={index === 0}
-                      onClick={() => moveHero(index, -1)}
-                    >
-                      前へ
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn--ghost btn--sm"
-                      disabled={index === form.heroImages.length - 1}
-                      onClick={() => moveHero(index, 1)}
-                    >
-                      次へ
-                    </button>
-                    <button
-                      type="button"
-                      className="btn btn--danger btn--sm"
-                      onClick={() => removeHero(image.id)}
-                    >
-                      削除
-                    </button>
-                  </div>
-                </div>
-              ))}
             </div>
-          )}
-          <div className="image-field__actions">
-            <UploadButton label="画像を追加" onSelect={uploadHero} />
-          </div>
-        </div>
-
-        <h2
-          style={{
-            fontSize: "1rem",
-            margin: "var(--space-5) 0 var(--space-3)",
-          }}
-        >
-          SNS リンク
-        </h2>
-        {form.socialLinks.map((link, i) => (
-          <div className="sns-row" key={i}>
-            <div className="sns-icon">
-              {link.iconPreview && <img src={link.iconPreview} alt="" />}
-              <UploadButton
-                label="通常"
-                onSelect={(file) => uploadIcon(i, file, "iconId")}
-              />
-            </div>
-            <div className="sns-icon sns-icon--dark">
-              {link.iconPreviewDark && (
-                <img src={link.iconPreviewDark} alt="" />
-              )}
-              <UploadButton
-                label="ダーク"
-                onSelect={(file) => uploadIcon(i, file, "iconIdDark")}
-              />
-            </div>
-            <div className="field">
-              <label>ラベル</label>
-              <input
-                type="text"
-                value={link.label}
-                onChange={(e) => setLink(i, { label: e.target.value })}
-              />
-            </div>
-            <div className="field">
-              <label>URL</label>
-              <input
-                type="url"
-                value={link.url}
-                onChange={(e) => setLink(i, { url: e.target.value })}
-              />
-            </div>
-            <button
-              type="button"
-              className="btn btn--danger btn--sm"
-              onClick={() =>
-                setForm({
-                  ...form,
-                  socialLinks: form.socialLinks.filter((_, j) => j !== i),
-                })
-              }
-            >
-              削除
-            </button>
-          </div>
-        ))}
-        <button
-          type="button"
-          className="btn btn--ghost btn--sm"
-          onClick={() =>
-            setForm({
-              ...form,
-              socialLinks: [...form.socialLinks, { label: "", url: "" }],
-            })
-          }
-        >
-          + リンクを追加
-        </button>
-
-        <div
-          style={{
-            marginTop: "var(--space-5)",
-            display: "flex",
-            gap: "var(--space-3)",
-            alignItems: "center",
-          }}
-        >
-          <button type="submit" className="btn">
-            保存
+          ))}
+          <button
+            type="button"
+            className="btn btn--ghost btn--sm"
+            onClick={() =>
+              setForm({
+                ...form,
+                socialLinks: [...form.socialLinks, { label: "", url: "" }],
+              })
+            }
+          >
+            + リンクを追加
           </button>
-          {status && <span className="muted">{status}</span>}
-        </div>
-      </form>
+
+          <div
+            style={{
+              marginTop: "var(--space-5)",
+              display: "flex",
+              gap: "var(--space-3)",
+              alignItems: "center",
+            }}
+          >
+            <button type="submit" className="btn">
+              保存
+            </button>
+            {status && <span className="muted">{status}</span>}
+          </div>
+        </form>
+        <HeroImageManager />
+      </div>
     </main>
   );
 }

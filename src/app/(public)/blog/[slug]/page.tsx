@@ -50,7 +50,7 @@ export default async function BlogDetail({
               {post.tags.flatMap((category) =>
                 category.tags.map((tag) => (
                   <span className="tag" key={tag.id}>
-                    {category.name} / {tag.name}
+                    {tag.name}
                   </span>
                 )),
               )}
