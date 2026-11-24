@@ -53,3 +53,4 @@ DB は Turso（libSQL）。ローカルは `docker-compose.yml` の libSQL サ�
 - 日時は JST 基準で `src/lib/datetime.ts` を使う。
 - 仕様書は `docs/spec/`（Spec 駆動開発）。UI モックは `docs/mock/`。
 - スタイルは Tailwind CSS 4。設定は `globals.css` の `@theme` に集約（tailwind.config は不使用）。
+- 新規タスクは `docs/work` 配下に発生日の`yyyy-mm-dd_タスク名` フォルダを作成し、その配下で作業ドキュメントや証跡管理を一元化する。
